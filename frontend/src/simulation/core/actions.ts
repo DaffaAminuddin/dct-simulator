@@ -1,0 +1,193 @@
+/**
+ * Action handlers. Each validates its intent (throwing SimError on hard
+ * errors), mutates BASE fields of the draft state, and returns warnings.
+ * Derived fields are recomputed afterwards by the derivation pipeline.
+ */
+import { getCableModel } from '@/data/cables/cableCatalog';
+import { FAULT_DEFINITIONS } from '@/data/faults/faultCatalog';
+import { getEquipmentModel } from '@/data/hardware/equipmentCatalog';
+import { clearFault, describeTarget, injectFault } from '@/simulation/diagnostics/FaultInjector';
+import type { EventDraft } from '@/simulation/diagnostics/HealthMonitor';
+import { installComponent, removeComponent } from '@/simulation/hardware/Compatibility';
+import { mountEquipment, unmountEquipment } from '@/simulation/hardware/Rack';
+import { checkFit, CONNECTOR_LABEL, requiredLengthM } from '@/simulation/networking/Cable';
+import { assertAdminControllable } from '@/simulation/networking/Switch';
+import { estimateIdleDemand } from '@/simulation/power/PowerState';
+import type { Equipment, Id, SimAction, SimulationState } from '@/types/simulation';
+import { isHost, isMainPowerOn } from './SimulationState';
+import { clamp, fail } from './util';
+
+export interface HandlerResult {
+  warnings: string[];
+  events: EventDraft[];
+}
+
+function hostOrFail(s: SimulationState, id: Id): Equipment {
+  const eq = s.equipment[id];
+  if (!eq) fail('UNKNOWN_EQUIPMENT', `Unknown equipment ${id}`);
+  if (!isHost(eq)) fail('NOT_A_HOST', `${eq.hostname} has no power control`);
+  return eq;
+}
+
+function procedure(message: string, equipmentId?: Id, severity: EventDraft['severity'] = 'info'): EventDraft {
+  return { severity, category: 'procedure', message, equipmentId, channels: ['bmc', 'led'] };
+}
+
+export function handleAction(s: SimulationState, action: SimAction): HandlerResult {
+  const warnings: string[] = [];
+  const events: EventDraft[] = [];
+
+  switch (action.type) {
+    case 'equipment/power': {
+      const eq = hostOrFail(s, action.equipmentId);
+      if (action.power === 'on') {
+        if (eq.location.kind === 'inventory') fail('NOT_INSTALLED', `${eq.hostname} is not installed in a rack`);
+        if (eq.powerCapacityW <= 0) fail('NO_POWER', `${eq.hostname} has no input power: check PSU cords, PDU outlets and feeds`);
+        if (eq.powerCapacityW < estimateIdleDemand(s, eq)) fail('INSUFFICIENT_POWER', `Delivering PSU capacity (${eq.powerCapacityW} W) is too low to power on ${eq.hostname}`);
+        if (eq.desiredPower !== 'on') {
+          eq.desiredPower = 'on';
+          eq.bootElapsedMs = 0;
+        }
+        eq.thermalTrip = false;
+        events.push(procedure(`${eq.hostname}: power on requested`, eq.id));
+      } else {
+        eq.desiredPower = 'off';
+        events.push(procedure(`${eq.hostname}: power off requested`, eq.id));
+      }
+      break;
+    }
+    case 'equipment/powerCycle': {
+      const eq = hostOrFail(s, action.equipmentId);
+      if (eq.powerCapacityW <= 0) fail('NO_POWER', `${eq.hostname} has no input power`);
+      eq.desiredPower = 'on';
+      eq.bootElapsedMs = 0;
+      eq.thermalTrip = false;
+      events.push(procedure(`${eq.hostname}: power cycle (warm reset)`, eq.id));
+      break;
+    }
+    case 'equipment/mount': {
+      warnings.push(...mountEquipment(s, action.equipmentId, action.rackId, action.uStart));
+      const eq = s.equipment[action.equipmentId];
+      events.push(procedure(`${eq.hostname} mounted in ${action.rackId} at U${action.uStart}`, eq.id));
+      break;
+    }
+    case 'equipment/unmount': {
+      const eq = s.equipment[action.equipmentId];
+      const from = eq?.location.kind === 'rack' ? eq.location.rackId : '';
+      warnings.push(...unmountEquipment(s, action.equipmentId));
+      events.push(procedure(`${eq.hostname} removed from ${from}`, eq.id));
+      break;
+    }
+    case 'equipment/setChassisOpen': {
+      const eq = hostOrFail(s, action.equipmentId);
+      if (eq.chassisOpen === action.open) break;
+      eq.chassisOpen = action.open;
+      if (action.open && isMainPowerOn(eq)) warnings.push('Chassis opened while running: airflow is reduced and an intrusion event is logged');
+      events.push(procedure(`${eq.hostname}: chassis ${action.open ? 'opened' : 'closed'}`, eq.id));
+      break;
+    }
+    case 'equipment/setUid': {
+      const eq = s.equipment[action.equipmentId];
+      if (!eq) fail('UNKNOWN_EQUIPMENT', `Unknown equipment ${action.equipmentId}`);
+      eq.uidLed = action.on;
+      break;
+    }
+    case 'equipment/setWorkload': {
+      const eq = hostOrFail(s, action.equipmentId);
+      eq.workload = action.workload;
+      break;
+    }
+    case 'component/remove': {
+      const comp = s.components[action.componentId];
+      const eqId = comp?.location.kind === 'equipment' ? comp.location.equipmentId : undefined;
+      const slot = comp?.location.kind === 'equipment' ? comp.location.slotId : '';
+      warnings.push(...removeComponent(s, action.componentId));
+      if (eqId) {
+        events.push(procedure(`${s.equipment[eqId].hostname}: removed ${slot} (S/N ${comp.serial})`, eqId));
+        for (const w of warnings) if (w.startsWith('Unsafe')) events.push(procedure(`${s.equipment[eqId].hostname}: ${w}`, eqId, 'warning'));
+      }
+      break;
+    }
+    case 'component/install': {
+      warnings.push(...installComponent(s, action.componentId, action.equipmentId, action.slotId));
+      const eq = s.equipment[action.equipmentId];
+      events.push(procedure(`${eq.hostname}: installed ${action.slotId} (S/N ${s.components[action.componentId].serial})`, eq.id));
+      for (const w of warnings) if (w.startsWith('Unsafe')) events.push(procedure(`${eq.hostname}: ${w}`, eq.id, 'warning'));
+      break;
+    }
+    case 'cable/connect': {
+      const cable = s.cables[action.cableId];
+      if (!cable) fail('UNKNOWN_CABLE', `Unknown cable ${action.cableId}`);
+      const port = s.ports[action.portId];
+      if (!port) fail('UNKNOWN_PORT', `Unknown port ${action.portId}`);
+      if (cable.ends[action.end].portId) fail('END_IN_USE', `That end of ${cable.label} is already plugged in`);
+      if (port.cableId) fail('PORT_OCCUPIED', `${port.label} already has a cable`);
+      const model = getCableModel(cable.modelId);
+      const plug = model.ends[action.end];
+      const fit = checkFit(port, plug);
+      if (!fit.ok) fail('CONNECTOR_MISMATCH', fit.reason ?? `${CONNECTOR_LABEL[plug]} does not fit`);
+      const otherId = cable.ends[action.end === 0 ? 1 : 0].portId;
+      if (otherId === port.id) fail('SAME_PORT', 'Both ends cannot go into the same port');
+      if (otherId) {
+        const need = requiredLengthM(s, s.ports[otherId], port);
+        if (need > model.lengthM) fail('CABLE_TOO_SHORT', `${model.shortName} is ${model.lengthM} m; this run needs about ${need.toFixed(1)} m`);
+      }
+      cable.ends[action.end].portId = port.id;
+      port.cableId = cable.id;
+      port.cableEnd = action.end;
+      events.push(procedure(`${cable.label} plugged into ${s.equipment[port.equipmentId].hostname} ${port.label}`, port.equipmentId));
+      break;
+    }
+    case 'cable/disconnect': {
+      const cable = s.cables[action.cableId];
+      if (!cable) fail('UNKNOWN_CABLE', `Unknown cable ${action.cableId}`);
+      const portId = cable.ends[action.end].portId;
+      if (!portId) fail('END_FREE', 'That end is not plugged in');
+      const port = s.ports[portId];
+      cable.ends[action.end].portId = null;
+      port.cableId = null;
+      port.cableEnd = null;
+      events.push(procedure(`${cable.label} unplugged from ${s.equipment[port.equipmentId].hostname} ${port.label}`, port.equipmentId));
+      break;
+    }
+    case 'port/setAdmin': {
+      const port = s.ports[action.portId];
+      if (!port) fail('UNKNOWN_PORT', `Unknown port ${action.portId}`);
+      assertAdminControllable(s, port);
+      port.adminUp = action.up;
+      events.push(procedure(`${s.equipment[port.equipmentId].hostname} ${port.label}: admin ${action.up ? 'up' : 'down'}`, port.equipmentId));
+      break;
+    }
+    case 'fault/inject': {
+      const f = injectFault(s, action);
+      events.push({
+        severity: 'warning',
+        category: 'fault',
+        devOnly: true,
+        message: `Fault injected: ${FAULT_DEFINITIONS[f.type].name} on ${describeTarget(s, f.targetId)}`,
+        channels: [],
+      });
+      break;
+    }
+    case 'fault/clear': {
+      const f = clearFault(s, action.faultId);
+      events.push({ severity: 'info', category: 'fault', devOnly: true, message: `Fault cleared: ${FAULT_DEFINITIONS[f.type].name} on ${describeTarget(s, f.targetId)}`, channels: [] });
+      break;
+    }
+    case 'facility/setCrahSupply': {
+      s.facility.crahSupplyC = clamp(action.tempC, 15, 35);
+      events.push(procedure(`CRAH supply setpoint set to ${s.facility.crahSupplyC} °C`));
+      break;
+    }
+    default: {
+      const never: never = action;
+      fail('UNKNOWN_ACTION', `Unknown action ${(never as { type: string }).type}`);
+    }
+  }
+  return { warnings, events };
+}
+
+/** Short model name for an equipment (used by UI and messages). */
+export function shortModel(eq: Equipment): string {
+  return getEquipmentModel(eq.modelId).shortName;
+}
