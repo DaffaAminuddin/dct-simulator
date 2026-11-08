@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/select';
 import { Segmented } from '@/components/ui/tabs';
 import { useProgressStore } from '@/stores/progressStore';
 import { useSimulationStore } from '@/stores/simulationStore';
+import { useTerminalStore } from '@/stores/terminalStore';
 import { type TrainingMode, useUiStore } from '@/stores/uiStore';
 
 const MODES: { id: TrainingMode; label: string; desc: string }[] = [
@@ -41,17 +42,20 @@ export function SettingsPage() {
 
       <Panel title="Simulation">
         <div className="space-y-3">
-          <p className="text-[12px] text-muted">Resetting rebuilds Data Hall 01 from the seed scenario. All faults, cabling changes and swaps are lost.</p>
+          <p className="text-[12px] text-muted">
+            Resetting rebuilds Data Hall 01 from the seed scenario. All faults, cabling changes and swaps are lost, and every work order goes back to Open. Your completed tickets, points and level are kept.
+          </p>
           {confirm === 'sim' ? (
             <div className="flex gap-2">
               <Button
                 variant="danger"
                 onClick={() => {
                   reset();
-                  useProgressStore.getState().abandonRuns();
+                  useProgressStore.getState().reopenTickets();
+                  useTerminalStore.getState().resetSession();
                   useUiStore.getState().clearSelection();
                   setConfirm(null);
-                  notify({ tone: 'ok', title: 'Simulation reset' });
+                  notify({ tone: 'ok', title: 'Simulation reset', detail: 'Every work order is open again.' });
                 }}
               >
                 Confirm reset

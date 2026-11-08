@@ -206,6 +206,11 @@ events are tagged `devOnly` so that root causes stay hidden outside developer mo
   `components/device/DeviceInfoCard.tsx` renders it with copy buttons in Rack Explorer, the
   data hall unit list and the "Affected device" block of every work order.
 - The work-order queue (`WORK_ORDERS`) is sorted easiest first: by difficulty, then target time.
+- `progressStore` keeps ticket status and the learner record apart. `workOrders` (status) belongs
+  to the current simulation: it is bound to the tab's `SESSION_ID` and `reopenTickets()` sets
+  every ticket back to Open when the simulation is reset, because the rebuilt hall has every
+  scenario problem again. `completed` (count, best time) survives resets and drives points,
+  level and achievements.
 
 ### Terminal (Phase 3)
 

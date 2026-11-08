@@ -1,7 +1,8 @@
 /**
  * Dashboard in the DESIGN.md layout: hero card, Facility Record stat cards,
- * Power Flow chart, rack shortcuts and work-order chips in the centre column;
- * Activity and Technician Kit on the right. All values come from the engine.
+ * Power Flow chart, rack shortcuts, rack capacity and facility systems in the
+ * centre column; Activity, Work Orders and Technician Kit on the right. All
+ * values come from the engine.
  */
 import {
   ArrowDownRight,
@@ -24,21 +25,23 @@ import { Link, useNavigate } from 'react-router';
 import { LineChart, Sparkline } from '@/components/dashboard/charts';
 import { Page } from '@/components/layout/AppShell';
 import { usePageMemory } from '@/hooks/usePageMemory';
-import { StatusDot } from '@/components/ui/badge';
+import { Badge, StatusDot } from '@/components/ui/badge';
+import { Meter } from '@/components/ui/panel';
 import { Select } from '@/components/ui/select';
 import { MODULES } from '@/data/learning/modules';
 import { WORK_ORDERS } from '@/data/workorders/workOrders';
+import { isHost, OS_STATES } from '@/simulation/core/SimulationState';
 import { worstHealth } from '@/simulation/core/util';
 import { displayedHealth, monitoringAlerts, visibleEvents } from '@/simulation/diagnostics/DiagnosticEngine';
 import { useDevMode } from '@/stores/hardwareStore';
-import { effectiveStatus, skillLevel, useProgressStore } from '@/stores/progressStore';
+import { completedCount, effectiveStatus, skillLevel, useProgressStore } from '@/stores/progressStore';
 import { useSim } from '@/stores/simulationStore';
 import { type Sample, useTelemetryStore, windowed } from '@/stores/telemetryStore';
 import { useUiStore } from '@/stores/uiStore';
-import type { EventCategory, Severity } from '@/types/simulation';
+import type { EventCategory, Severity, SimulationState } from '@/types/simulation';
 import { cn } from '@/utils/cn';
 import { formatClock, formatW, healthTone } from '@/utils/format';
-import { STATUS_LABEL } from './WorkOrdersPage';
+import { STATUS_LABEL, STATUS_TONE } from './WorkOrdersPage';
 
 const WINDOWS = [
   { id: '300000', label: 'Last 5 min' },
@@ -98,8 +101,11 @@ export function DashboardPage() {
   const last = series.at(-1) as Sample;
   const alerts = useMemo(() => monitoringAlerts(s, devMode), [s, devMode]);
   const events = useMemo(() => visibleEvents(s.events, devMode).slice(-8).reverse(), [s.events, devMode]);
-  const resolved = WORK_ORDERS.filter((w) => ['resolved', 'closed'].includes(effectiveStatus(progress.workOrders[w.id]))).length;
+  const resolved = completedCount(progress.completed, WORK_ORDERS.map((w) => w.id));
   const skill = skillLevel(progress.modulesCompleted.length, resolved);
+  const ticketStatus = WORK_ORDERS.map((w) => effectiveStatus(progress.workOrders[w.id]));
+  const openTickets = ticketStatus.filter((st) => st === 'open').length;
+  const activeTickets = ticketStatus.filter((st) => st === 'in_progress' || st === 'pending_validation').length;
   const nextModule = MODULES.find((m) => !progress.modulesCompleted.includes(m.id));
   const crit = alerts.filter((a) => a.severity === 'critical').length;
   const laptopEth = s.equipment[s.workstation.equipmentId]?.portIds.map((id) => s.ports[id]).find((p) => p?.defId === 'eth0');
@@ -210,46 +216,29 @@ export function DashboardPage() {
             {series.length < 3 && <p className="mt-1 text-[12px] text-muted">The chart fills in as simulated time passes (one sample every 5 s). Use ▶ or the skip button in the header.</p>}
           </section>
 
-          {/* Jump to rack + Work orders */}
+          {/* Jump to rack */}
+          <section className="rounded-box border border-border p-5">
+            <h2 className="mb-4 text-[17px] font-semibold">Jump to Rack</h2>
+            <div className="flex flex-wrap gap-3.5">
+              <button type="button" onClick={() => navigate('/datacenter')} aria-label="Open the 3D data hall" title="3D data hall" className="flex size-11 items-center justify-center rounded-full bg-fg text-bg">
+                <Building2 className="size-5" />
+              </button>
+              {Object.values(s.racks).map((r, i) => {
+                const h = worstHealth(Object.values(s.equipment).filter((e) => e.location.kind === 'rack' && e.location.rackId === r.id).map((e) => displayedHealth(s, e, devMode)));
+                return (
+                  <Link key={r.id} to={`/racks/${r.id}`} title={r.name} className="relative flex size-11 items-center justify-center rounded-full text-[12px] font-bold text-[#16151c]" style={{ background: PASTELS[i % PASTELS.length] }}>
+                    {r.id}
+                    <StatusDot tone={healthTone(h)} className="absolute -right-0.5 -bottom-0.5 size-3 ring-2 ring-bg" />
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Rack capacity + facility systems */}
           <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-box border border-border p-5">
-              <h2 className="mb-4 text-[17px] font-semibold">Jump to Rack</h2>
-              <div className="flex flex-wrap gap-3.5">
-                <button type="button" onClick={() => navigate('/datacenter')} aria-label="Open the 3D data hall" title="3D data hall" className="flex size-11 items-center justify-center rounded-full bg-fg text-bg">
-                  <Building2 className="size-5" />
-                </button>
-                {Object.values(s.racks).map((r, i) => {
-                  const h = worstHealth(Object.values(s.equipment).filter((e) => e.location.kind === 'rack' && e.location.rackId === r.id).map((e) => displayedHealth(s, e, devMode)));
-                  return (
-                    <Link key={r.id} to={`/racks/${r.id}`} title={r.name} className="relative flex size-11 items-center justify-center rounded-full text-[12px] font-bold text-[#16151c]" style={{ background: PASTELS[i % PASTELS.length] }}>
-                      {r.id}
-                      <StatusDot tone={healthTone(h)} className="absolute -right-0.5 -bottom-0.5 size-3 ring-2 ring-bg" />
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-            <section className="rounded-box border border-border p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-[17px] font-semibold">Work Orders</h2>
-                <Link to="/workorders" className="text-[12px] font-medium text-muted hover:text-fg">
-                  View all
-                </Link>
-              </div>
-              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
-                {WORK_ORDERS.map((w) => {
-                  const st = effectiveStatus(progress.workOrders[w.id]);
-                  return (
-                    <Link key={w.id} to={`/workorders/${w.id}`} className="flex h-16 w-[112px] shrink-0 flex-col justify-center rounded-chip bg-surface-2 px-3 hover:bg-surface-3">
-                      <span className="text-[12px] text-muted">
-                        {w.id} · {w.priority}
-                      </span>
-                      <span className="truncate text-[14px] font-semibold">{STATUS_LABEL[st]}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
+            <RackCapacity s={s} />
+            <FacilitySystems s={s} />
           </div>
         </div>
 
@@ -284,6 +273,48 @@ export function DashboardPage() {
                     </li>
                   ))
                 ))}
+            </ul>
+          </section>
+
+          <section className="rounded-box border border-border" aria-label="Work orders">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <div>
+                <h2 className="text-[17px] font-semibold">Work Orders</h2>
+                <div className="text-[12px] text-muted">
+                  {openTickets} open{activeTickets ? ` · ${activeTickets} in progress` : ''} · easiest first
+                </div>
+              </div>
+              <Link to="/workorders" className="text-[12px] font-medium text-muted hover:text-fg">
+                View all
+              </Link>
+            </div>
+            <ul className="p-2">
+              {WORK_ORDERS.map((w) => {
+                const st = effectiveStatus(progress.workOrders[w.id]);
+                return (
+                  <li key={w.id}>
+                    <Link to={`/workorders/${w.id}`} className="flex items-center gap-3 rounded-chip px-3 py-2 hover:bg-surface-2">
+                      <span
+                        className={cn(
+                          'flex size-9 shrink-0 items-center justify-center rounded-chip text-[11px] font-bold',
+                          w.priority === 'P1' ? 'bg-crit-soft text-crit-ink' : w.priority === 'P2' ? 'bg-warn-soft text-warn-ink' : 'bg-surface-2 text-muted',
+                        )}
+                      >
+                        {w.priority}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[13px] font-medium">{w.title}</span>
+                        <span className="block text-[11px] text-muted">
+                          {w.id} · {w.difficulty}
+                        </span>
+                      </span>
+                      <Badge tone={STATUS_TONE[st]} className="shrink-0">
+                        {STATUS_LABEL[st]}
+                      </Badge>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </section>
 
@@ -328,6 +359,153 @@ export function DashboardPage() {
         </div>
       </div>
     </Page>
+  );
+}
+
+const loadTone = (frac: number): 'ok' | 'warn' | 'crit' => (frac > 0.9 ? 'crit' : frac > 0.75 ? 'warn' : 'ok');
+
+/** IT load against each rack's design power, with inlet temperature and running hosts. */
+function RackCapacity({ s }: { s: SimulationState }) {
+  const rows = useMemo(
+    () =>
+      Object.values(s.racks).map((r) => {
+        const hosts = Object.values(s.equipment).filter((e) => e.location.kind === 'rack' && e.location.rackId === r.id && isHost(e));
+        return { r, hosts: hosts.length, running: hosts.filter((h) => OS_STATES.has(h.state)).length };
+      }),
+    [s.racks, s.equipment],
+  );
+  return (
+    <section className="rounded-box border border-border p-5" aria-label="Rack capacity">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-[17px] font-semibold">Rack Capacity</h2>
+        <span className="text-[12px] text-muted">IT load vs design</span>
+      </div>
+      <ul className="-mx-2 space-y-1">
+        {rows.map(({ r, hosts, running }) => {
+          const frac = r.maxPowerW ? r.powerW / r.maxPowerW : 0;
+          return (
+            <li key={r.id}>
+              <Link to={`/racks/${r.id}`} className="block rounded-chip px-2 py-1.5 hover:bg-surface-2">
+                <div className="flex items-baseline gap-2 text-[12.5px]">
+                  <span className="w-8 font-mono font-semibold">{r.id}</span>
+                  <span className="min-w-0 flex-1 truncate text-muted">{r.name.split('·')[1]?.trim()}</span>
+                  <span className="tabular">
+                    {formatW(r.powerW)} <span className="text-subtle">/ {formatW(r.maxPowerW)}</span>
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center gap-3">
+                  <Meter value={r.powerW} max={r.maxPowerW} tone={loadTone(frac)} className="h-1.5 flex-1" label={`${r.id} IT load`} />
+                  <span className={cn('w-14 text-right text-[11px] tabular', r.inletC > 27 ? 'text-warn-ink' : 'text-subtle')}>{r.inletC.toFixed(1)} °C</span>
+                  <span className="w-12 text-right text-[11px] text-subtle tabular">{hosts ? `${running}/${hosts}` : '—'}</span>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-3 flex justify-end gap-3 text-[11px] text-subtle">
+        <span>inlet</span>
+        <span>hosts up</span>
+      </div>
+    </section>
+  );
+}
+
+const COOLANT_TONE = { normal: 'ok', warning: 'warn', critical: 'crit', failed: 'crit' } as const;
+
+/** Power feeds, A+B redundancy, CRAH supply air and liquid-cooling loops. */
+function FacilitySystems({ s }: { s: SimulationState }) {
+  const feeds = Object.values(s.facility.feeds);
+  const total = feeds.reduce((n, f) => n + f.loadW, 0);
+  const oneFeed = Math.min(...feeds.map((f) => f.capacityW));
+  const redundant = feeds.every((f) => f.up) && total <= oneFeed;
+  const crah = s.facility.crahSupplyC;
+  const crahOk = crah >= 18 && crah <= 27;
+  const racks = Object.values(s.racks);
+  const loops = racks.filter((r) => r.coolant);
+  const design = racks.reduce((n, r) => n + r.maxPowerW, 0);
+  const itLoad = racks.reduce((n, r) => n + r.powerW, 0);
+  const openU = racks.reduce((n, r) => n + r.openU, 0);
+  return (
+    <section className="rounded-box border border-border p-5" aria-label="Facility systems">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-[17px] font-semibold">Facility Systems</h2>
+        <Link to="/facility" className="text-[12px] font-medium text-muted hover:text-fg">
+          Cooling &amp; Power
+        </Link>
+      </div>
+      <div className="space-y-4">
+        <div className="space-y-2.5">
+          {feeds.map((f) => (
+            <div key={f.id}>
+              <div className="flex items-center gap-2 text-[12.5px]">
+                <Zap className={cn('size-3.5', f.up ? 'text-ok-ink' : 'text-crit-ink')} />
+                <span className="min-w-0 flex-1 truncate font-medium">{f.name}</span>
+                <span className="tabular">
+                  {f.up ? formatW(f.loadW) : 'down'} <span className="text-subtle">/ {formatW(f.capacityW)}</span>
+                </span>
+              </div>
+              <Meter value={f.up ? f.loadW : 0} max={f.capacityW} tone={f.up ? loadTone(f.loadW / f.capacityW) : 'crit'} className="mt-1 h-1.5" label={`Feed ${f.id} load`} />
+            </div>
+          ))}
+          <div className="flex items-center gap-2 text-[12px]">
+            <StatusDot tone={redundant ? 'ok' : 'warn'} />
+            <span className="text-muted">{redundant ? `A+B redundant: one feed can carry the hall (${formatW(total)})` : `Redundancy at risk: hall load ${formatW(total)} on one ${formatW(oneFeed)} feed`}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 border-t border-border pt-3 text-[12.5px]">
+          <Thermometer className="size-3.5 text-info-ink" />
+          <span className="font-medium">CRAH supply air</span>
+          <span className="ml-auto tabular">{crah} °C</span>
+          <Badge tone={crahOk ? 'ok' : 'warn'}>{crahOk ? 'In range' : 'Out of 18–27 °C'}</Badge>
+        </div>
+
+        {loops.length > 0 && (
+          <div className="space-y-2.5 border-t border-border pt-3">
+            {loops.map((r) => {
+              const c = r.coolant!;
+              return (
+                <div key={r.id}>
+                  <div className="flex items-center gap-2 text-[12.5px]">
+                    <Droplets className="size-3.5 text-info-ink" />
+                    <span className="font-medium">{r.id} liquid loop</span>
+                    <span className="ml-auto text-[11.5px] text-subtle tabular">
+                      {c.supplyC} → {c.returnC} °C
+                    </span>
+                    <Badge tone={c.leak ? 'crit' : COOLANT_TONE[c.status]}>{c.leak ? 'Leak' : c.status}</Badge>
+                  </div>
+                  <div className="mt-1 flex items-center gap-3">
+                    <Meter value={c.flowPct} max={100} tone={c.flowPct >= 90 ? 'ok' : c.flowPct > 50 ? 'warn' : 'crit'} className="h-1.5 flex-1" label={`${r.id} coolant flow`} />
+                    <span className="w-24 text-right text-[11px] text-subtle tabular">{c.flowLpm} L/min</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="space-y-2.5 border-t border-border pt-3">
+          <div>
+            <div className="flex items-center gap-2 text-[12.5px]">
+              <Server className="size-3.5 text-muted" />
+              <span className="font-medium">Hall IT load</span>
+              <span className="ml-auto tabular">
+                {formatW(itLoad)} <span className="text-subtle">/ {formatW(design)} design</span>
+              </span>
+            </div>
+            <Meter value={itLoad} max={design} tone={loadTone(itLoad / design)} className="mt-1 h-1.5" label="Hall IT load against design" />
+          </div>
+          <div className="flex items-center gap-2 text-[12.5px]">
+            <Building2 className="size-3.5 text-muted" />
+            <span className="font-medium">Free rack space</span>
+            <span className="ml-auto tabular">
+              {openU} U <span className="text-subtle">across {racks.length} racks</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

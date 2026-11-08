@@ -94,7 +94,8 @@ describe('Dashboard', () => {
       </MemoryRouter>,
     );
     fireEvent.change(screen.getByRole('combobox', { name: 'Scope' }), { target: { value: 'R01' } });
-    expect(screen.getByText('10/10')).toBeInTheDocument();
+    const hosts = screen.getByText('Hosts healthy').closest('a') as HTMLElement;
+    expect(within(hosts).getByText('10/10')).toBeInTheDocument();
   });
 });
 

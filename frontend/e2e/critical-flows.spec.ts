@@ -33,6 +33,38 @@ test('every sidebar section renders without errors', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('resetting the simulation reopens resolved tickets but keeps the learner record', async ({ page }) => {
+  const errors = watchErrors(page);
+  await freshSession(page);
+  // Fix DCT-0002 (seeded: PSU 2 cord of dh1-r02-n04 left unplugged) directly in the engine.
+  const results = await page.evaluate(() => {
+    const { engine } = (window as unknown as { __dct: { engine: { dispatch: (a: unknown) => { ok: boolean; message?: string }; getState: () => { cables: Record<string, { id: string; modelId: string; ends: { portId: string | null }[] }> } } } }).__dct;
+    const cord = Object.values(engine.getState().cables).find((c) => c.modelId === 'pwr-c13c14-2m' && !c.ends[0].portId && !c.ends[1].portId);
+    if (!cord) throw new Error('no spare cord');
+    return [engine.dispatch({ type: 'cable/connect', cableId: cord.id, end: 0, portId: 'srv-r02-n04:psu2.ac' }), engine.dispatch({ type: 'cable/connect', cableId: cord.id, end: 1, portId: 'pdu-r02-b:o20' })];
+  });
+  for (const r of results) expect(r.ok, r.message).toBe(true);
+
+  await page.goto('/workorders/DCT-0002');
+  await page.getByRole('button', { name: /Run validation/ }).click();
+  const ticket = page.getByRole('heading', { name: 'Work order #DCT-0002' }).locator('xpath=ancestor::section[1]');
+  await expect(ticket.getByText('Resolved', { exact: true })).toBeVisible();
+
+  await page.getByRole('complementary', { name: 'Sidebar' }).getByRole('link', { name: /^Settings/ }).click();
+  await page.getByRole('button', { name: 'Reset simulation' }).click();
+  await page.getByRole('button', { name: 'Confirm reset' }).click();
+
+  await page.getByRole('complementary', { name: 'Sidebar' }).getByRole('link', { name: /^Work Orders/ }).click();
+  await expect(ticket.getByText('Open', { exact: true })).toBeVisible();
+  await expect(ticket).toContainText('Completed 1×');
+  // The reset hall has the original problem again, so validation fails.
+  await page.getByRole('button', { name: /Run validation/ }).click();
+  await expect(ticket.getByText('Pending validation', { exact: true })).toBeVisible();
+  await page.getByRole('complementary', { name: 'Sidebar' }).getByRole('link', { name: /^Progress/ }).click();
+  await expect(page.getByText('1/8')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('the theme switch restyles the app and survives a reload', async ({ page }) => {
   const errors = watchErrors(page);
   await freshSession(page);

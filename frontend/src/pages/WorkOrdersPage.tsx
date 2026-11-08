@@ -124,6 +124,7 @@ function WorkOrderDetail({ id }: { id: string }) {
   const w = getWorkOrder(id);
   const navigate = useNavigate();
   const run = useProgressStore((s) => s.workOrders[id]);
+  const record = useProgressStore((s) => s.completed[id]);
   const setRun = useProgressStore((s) => s.setRun);
   const log = useProgressStore((s) => s.log);
   const mode = useUiStore((s) => s.trainingMode);
@@ -198,6 +199,9 @@ function WorkOrderDetail({ id }: { id: string }) {
             ['Difficulty', w.difficulty],
             ...(startedAt !== undefined && live ? ([['Elapsed (sim)', formatElapsed(timeMs - startedAt)]] as [string, string][]) : []),
             ...(run?.resolvedInMs !== undefined && status === 'resolved' ? ([['Resolved in', `${formatElapsed(run.resolvedInMs)} (target ${Math.round(w.targetTimeS / 60)} min)`]] as [string, string][]) : []),
+            ...(record
+              ? ([['Your record', `Completed ${record.count}×${record.bestMs !== undefined ? ` · best ${formatElapsed(record.bestMs)}` : ''}`]] as [string, string][])
+              : []),
           ]}
         />
         {device && <AffectedDevice ticketId={w.id} equipmentId={device} onRack={goLocation} />}

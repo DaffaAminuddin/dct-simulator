@@ -27,6 +27,7 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, group: 'Operate' },
+  { to: '/workorders', label: 'Work Orders', icon: ClipboardList, group: 'Operate' },
   { to: '/datacenter', label: 'Virtual Data Center', icon: Building2, group: 'Operate' },
   { to: '/racks', label: 'Rack Explorer', icon: Rows3, group: 'Operate' },
   { to: '/hardware', label: 'Hardware Lab', icon: HardDrive, group: 'Operate' },
@@ -34,7 +35,6 @@ export const NAV: NavItem[] = [
   { to: '/gpu', label: 'GPU Diagnostics', icon: Microchip, group: 'Operate' },
   { to: '/facility', label: 'Cooling & Power', icon: Gauge, group: 'Operate' },
   { to: '/terminal', label: 'Terminal', icon: Terminal, group: 'Operate' },
-  { to: '/workorders', label: 'Work Orders', icon: ClipboardList, group: 'Train' },
   { to: '/learn', label: 'Learning Center', icon: GraduationCap, group: 'Train' },
   { to: '/inventory', label: 'Inventory', icon: Package, group: 'Train' },
   { to: '/progress', label: 'Progress & Achievements', icon: Trophy, group: 'Train' },

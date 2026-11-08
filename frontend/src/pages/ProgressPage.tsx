@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState, Meter, Panel, Stat } from '@/components/ui/panel';
 import { MODULES } from '@/data/learning/modules';
 import { WORK_ORDERS } from '@/data/workorders/workOrders';
-import { effectiveStatus, skillLevel, useProgressStore } from '@/stores/progressStore';
+import { skillLevel, useProgressStore } from '@/stores/progressStore';
 import { formatElapsed } from '@/utils/format';
 
 const MISTAKE_TEXT: Record<string, string> = {
@@ -26,11 +26,13 @@ const MISTAKE_TEXT: Record<string, string> = {
 
 export function ProgressPage() {
   const p = useProgressStore();
-  const resolvedRuns = WORK_ORDERS.map((w) => ({ w, run: p.workOrders[w.id] })).filter(({ run }) => ['resolved', 'closed'].includes(effectiveStatus(run)));
+  // The learner's record survives simulation resets; ticket status does not.
+  const resolvedRuns = WORK_ORDERS.filter((w) => p.completed[w.id]).map((w) => ({ w, rec: p.completed[w.id] }));
   const skill = skillLevel(p.modulesCompleted.length, resolvedRuns.length);
   const validations = Object.values(p.workOrders).reduce((n, r) => n + (r.validations ?? 0), 0);
-  const accuracy = validations ? Math.round((resolvedRuns.length / validations) * 100) : null;
-  const times = resolvedRuns.map(({ run }) => run?.resolvedInMs).filter((x): x is number => typeof x === 'number');
+  const completions = resolvedRuns.reduce((n, { rec }) => n + rec.count, 0);
+  const accuracy = validations ? Math.min(100, Math.round((completions / validations) * 100)) : null;
+  const times = resolvedRuns.map(({ rec }) => rec.bestMs).filter((x): x is number => typeof x === 'number');
   const avg = times.length ? times.reduce((a, b) => a + b, 0) / times.length : null;
   const mistakes = Object.entries(p.mistakes).sort((a, b) => b[1] - a[1]);
 
@@ -50,7 +52,7 @@ export function ProgressPage() {
         <Stat label="Modules" value={`${p.modulesCompleted.length}/${MODULES.length}`} sub="completed" />
         <Stat label="Work orders" value={`${resolvedRuns.length}/${WORK_ORDERS.length}`} sub="resolved" />
         <Stat label="Diagnostic accuracy" value={accuracy === null ? '—' : `${accuracy}%`} sub="resolved / validation attempts" />
-        <Stat label="Avg completion" value={avg === null ? '—' : formatElapsed(avg)} sub="simulated time per ticket" />
+        <Stat label="Avg best time" value={avg === null ? '—' : formatElapsed(avg)} sub="simulated time per ticket" />
         <Stat label="Actions taken" value={p.actions} sub={`${mistakes.reduce((n, [, c]) => n + c, 0)} refused by the engine`} />
       </div>
       <Panel title="Level progress">

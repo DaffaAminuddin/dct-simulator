@@ -15,7 +15,7 @@ const themes = (process.env.THEMES ?? 'light,dark').split(',');
 const browser = await chromium.launch({ channel: process.env.PW_CHANNEL ?? 'msedge' });
 for (const theme of themes) {
   for (const w of widths) {
-    const ctx = await browser.newContext({ viewport: { width: w, height: w < 768 ? 844 : 912 } });
+    const ctx = await browser.newContext({ viewport: { width: w, height: Number(process.env.HEIGHT || (w < 768 ? 844 : 912)) } });
     // UISTATE='{"selectedEquipmentId":"srv-r01-02"}' preloads UI selections (persisted ui store).
     const extra = JSON.parse(process.env.UISTATE || '{}');
     await ctx.addInitScript(

@@ -6,7 +6,7 @@
 import { FlaskConical, Moon, Settings as SettingsIcon, Sun, X } from 'lucide-react';
 import { NavLink } from 'react-router';
 import { WORK_ORDERS } from '@/data/workorders/workOrders';
-import { effectiveStatus, skillLevel, useProgressStore } from '@/stores/progressStore';
+import { completedCount, skillLevel, useProgressStore } from '@/stores/progressStore';
 import { useUiStore } from '@/stores/uiStore';
 import { cn } from '@/utils/cn';
 import { NAV } from './nav';
@@ -40,8 +40,8 @@ export function Sidebar() {
   const setTheme = useUiStore((s) => s.setTheme);
   const name = useProgressStore((s) => s.learnerName);
   const modules = useProgressStore((s) => s.modulesCompleted.length);
-  const runs = useProgressStore((s) => s.workOrders);
-  const resolved = WORK_ORDERS.filter((w) => ['resolved', 'closed'].includes(effectiveStatus(runs[w.id]))).length;
+  const completed = useProgressStore((s) => s.completed);
+  const resolved = completedCount(completed, WORK_ORDERS.map((w) => w.id));
   const skill = skillLevel(modules, resolved);
   const main = NAV.filter((n) => n.group !== 'System');
   const dark = theme === 'dark';
