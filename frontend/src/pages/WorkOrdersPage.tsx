@@ -1,12 +1,15 @@
-import { CheckCircle2, CircleDashed, Lightbulb, MapPin, Play, ShieldCheck, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCircle2, CircleDashed, HardDrive, Lightbulb, MapPin, Play, ShieldCheck, XCircle } from 'lucide-react';
+import { Fragment, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
+import { CopyButton, DeviceInfoCard } from '@/components/device/DeviceInfoCard';
 import { Page } from '@/components/layout/AppShell';
+import { usePageMemory } from '@/hooks/usePageMemory';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Callout, Mono, PhaseNotice } from '@/components/ui/misc';
 import { EmptyState, KV, Panel } from '@/components/ui/panel';
-import { getWorkOrder, resolveSetup, type ResolutionCheck, WORK_ORDERS } from '@/data/workorders/workOrders';
+import { DIFFICULTY_ORDER, getWorkOrder, resolveSetup, type ResolutionCheck, WORK_ORDERS, workOrderDevice } from '@/data/workorders/workOrders';
+import { deviceInfo } from '@/simulation/inventory/DeviceInfo';
 import { effectiveStatus, SESSION_ID, useProgressStore, type WorkOrderStatus } from '@/stores/progressStore';
 import { getSim, useSim, useSimulationStore } from '@/stores/simulationStore';
 import { useUiStore } from '@/stores/uiStore';
@@ -26,36 +29,50 @@ export function WorkOrdersPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const runs = useProgressStore((s) => s.workOrders);
-  const selected = getWorkOrder(id ?? '') ?? WORK_ORDERS[0];
+  const [lastId, setLastId] = usePageMemory('workOrderId');
+  const selected = getWorkOrder(id ?? '') ?? getWorkOrder(lastId ?? '') ?? WORK_ORDERS[0];
+  const equipment = useSim((s) => s.equipment);
+  useEffect(() => setLastId(selected.id), [selected.id, setLastId]);
 
   return (
     <Page>
       <div className="grid gap-3 lg:grid-cols-[340px_minmax(0,1fr)]">
-        <Panel title="Ticket queue" bodyClassName="p-0">
+        <Panel title="Ticket queue" subtitle="Easiest first" bodyClassName="p-0">
           <ul className="divide-y divide-border">
-            {WORK_ORDERS.map((w) => {
+            {WORK_ORDERS.map((w, i) => {
               const st = effectiveStatus(runs[w.id]);
+              const device = workOrderDevice(w);
+              const newGroup = i === 0 || WORK_ORDERS[i - 1].difficulty !== w.difficulty;
               return (
-                <li key={w.id}>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/workorders/${w.id}`)}
-                    aria-current={w.id === selected.id}
-                    className={cn('w-full px-3 py-2 text-left hover:bg-surface-2', w.id === selected.id && 'bg-surface-2 shadow-[inset_2px_0_0_var(--color-accent)]')}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Mono className="text-muted">{w.id}</Mono>
-                      <Badge tone={w.priority === 'P1' ? 'crit' : w.priority === 'P2' ? 'warn' : 'muted'}>{w.priority}</Badge>
-                      <Badge tone={STATUS_TONE[st]} className="ml-auto">
-                        {STATUS_LABEL[st]}
-                      </Badge>
-                    </div>
-                    <div className="mt-1 truncate text-[12.5px]">{w.title}</div>
-                    <div className="text-[11px] text-subtle">
-                      {w.location.rackId} / {w.location.u} · {w.difficulty}
-                    </div>
-                  </button>
-                </li>
+                <Fragment key={w.id}>
+                  {newGroup && (
+                    <li className="flex items-center gap-2 bg-surface-2 px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-subtle uppercase">
+                      <span>{w.difficulty}</span>
+                      <span className="ml-auto font-normal tracking-normal normal-case">level {DIFFICULTY_ORDER.indexOf(w.difficulty) + 1} of 3</span>
+                    </li>
+                  )}
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/workorders/${w.id}`)}
+                      aria-current={w.id === selected.id}
+                      className={cn('w-full px-3 py-2 text-left hover:bg-surface-2', w.id === selected.id && 'bg-surface-2 shadow-[inset_2px_0_0_var(--color-accent)]')}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Mono className="text-muted">{w.id}</Mono>
+                        <Badge tone={w.priority === 'P1' ? 'crit' : w.priority === 'P2' ? 'warn' : 'muted'}>{w.priority}</Badge>
+                        <Badge tone={STATUS_TONE[st]} className="ml-auto">
+                          {STATUS_LABEL[st]}
+                        </Badge>
+                      </div>
+                      <div className="mt-1 truncate text-[12.5px]">{w.title}</div>
+                      <div className="truncate text-[11px] text-subtle">
+                        {w.location.rackId} / {w.location.u}
+                        {device && equipment[device] ? ` · ${equipment[device].hostname}` : ''}
+                      </div>
+                    </button>
+                  </li>
+                </Fragment>
               );
             })}
           </ul>
@@ -63,6 +80,43 @@ export function WorkOrdersPage() {
         <WorkOrderDetail key={selected.id} id={selected.id} />
       </div>
     </Page>
+  );
+}
+
+/** The device a ticket is about: identity and addresses, ready to copy into notes. */
+function AffectedDevice({ ticketId, equipmentId, onRack }: { ticketId: string; equipmentId: string; onRack: () => void }) {
+  const navigate = useNavigate();
+  const s = useSim((st) => st);
+  const eq = s.equipment[equipmentId];
+  if (!eq) return null;
+  const info = deviceInfo(s, eq);
+  const summary = [
+    `${ticketId} · ${info.hostname}`,
+    `Location: ${info.location}`,
+    `Model: ${info.model}`,
+    `PN: ${info.partNumber}  SN: ${info.serial}  Asset: ${info.assetTag}`,
+    ...(info.management?.ip ? [`${eq.kind === 'switch' ? 'Mgmt' : 'BMC'}: ${info.management.ip}/${info.management.prefix}  MAC ${info.management.address}`] : []),
+    ...info.network.filter((n) => n.ip).map((n) => `${n.iface ?? n.label}: ${n.ip}/${n.prefix}  MAC ${n.address}`),
+  ].join('\n');
+  return (
+    <section className="rounded-card border border-border p-4" aria-label="Affected device">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <h3 className="text-[15px] font-semibold">Affected device</h3>
+        <span className="font-mono text-[12px] text-muted">{info.hostname}</span>
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <Button size="xs" variant="outline" onClick={onRack}>
+            <MapPin /> Rack Explorer
+          </Button>
+          <Button size="xs" variant="outline" onClick={() => navigate(`/hardware/${equipmentId}`)}>
+            <HardDrive /> Hardware Lab
+          </Button>
+          <span className="inline-flex items-center gap-0.5 rounded-full border border-border pl-2.5 text-[12px] text-muted">
+            Copy summary <CopyButton value={summary} label="Device summary" />
+          </span>
+        </div>
+      </div>
+      <DeviceInfoCard equipmentId={equipmentId} compact />
+    </section>
   );
 }
 
@@ -80,6 +134,7 @@ function WorkOrderDetail({ id }: { id: string }) {
   const [showHint, setShowHint] = useState(false);
   if (!w) return <EmptyState title="Unknown work order" />;
   const status = effectiveStatus(run);
+  const device = workOrderDevice(w);
   const startedAt = run?.session === SESSION_ID ? run.startedAtSimMs : undefined;
   const live = status === 'in_progress' || status === 'pending_validation';
   const canStart = status === 'open' || status === 'closed' || status === 'resolved';
@@ -145,6 +200,7 @@ function WorkOrderDetail({ id }: { id: string }) {
             ...(run?.resolvedInMs !== undefined && status === 'resolved' ? ([['Resolved in', `${formatElapsed(run.resolvedInMs)} (target ${Math.round(w.targetTimeS / 60)} min)`]] as [string, string][]) : []),
           ]}
         />
+        {device && <AffectedDevice ticketId={w.id} equipmentId={device} onRack={goLocation} />}
         <div className="grid gap-3 md:grid-cols-2">
           <div>
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-subtle">Symptoms</div>

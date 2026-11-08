@@ -24,7 +24,47 @@ export interface CableInHand {
 
 export type Theme = 'light' | 'dark';
 
-export type LaptopApp = 'home' | 'network' | 'ping' | 'ssh' | 'browser' | 'console';
+export type LaptopApp = 'home' | 'terminal' | 'network' | 'ping' | 'ssh' | 'browser' | 'console';
+
+/**
+ * What each page had open last time. Persisted, so leaving a page (or
+ * reloading) and coming back resumes the work instead of resetting it.
+ */
+export interface PageMemory {
+  workOrderId: string | null;
+  moduleId: string | null;
+  hardwareEquipmentId: Id | null;
+  hardwareSlotId: string | null;
+  gpuNodeId: Id | null;
+  networkQuery: string;
+  networkMedia: string;
+  networkProblemsOnly: boolean;
+  dataHallPreset: string;
+  dataHallRackId: Id | null;
+  dataHallUnitId: Id | null;
+  equipmentTab: string;
+  inventoryTab: string;
+  dashboardScope: string;
+  dashboardWindow: string;
+}
+
+export const PAGE_DEFAULTS: PageMemory = {
+  workOrderId: null,
+  moduleId: null,
+  hardwareEquipmentId: null,
+  hardwareSlotId: null,
+  gpuNodeId: null,
+  networkQuery: '',
+  networkMedia: 'all',
+  networkProblemsOnly: false,
+  dataHallPreset: 'overview',
+  dataHallRackId: null,
+  dataHallUnitId: null,
+  equipmentTab: 'overview',
+  inventoryTab: 'components',
+  dashboardScope: 'all',
+  dashboardWindow: '900000',
+};
 
 interface UiStore {
   selectedRackId: Id;
@@ -41,6 +81,7 @@ interface UiStore {
   laptopOpen: boolean;
   laptopApp: LaptopApp;
   theme: Theme;
+  page: PageMemory;
   toasts: Toast[];
   selectRack: (id: Id) => void;
   selectEquipment: (id: Id | null, rackId?: Id) => void;
@@ -56,6 +97,7 @@ interface UiStore {
   setLaptopOpen: (open: boolean) => void;
   openLaptopApp: (app: LaptopApp) => void;
   setTheme: (t: Theme) => void;
+  setPage: (patch: Partial<PageMemory>) => void;
   notify: (t: Omit<Toast, 'id'>) => void;
   dismiss: (id: number) => void;
   clearSelection: () => void;
@@ -80,6 +122,7 @@ export const useUiStore = create<UiStore>()(
       laptopOpen: false,
       laptopApp: 'home',
       theme: 'light',
+      page: PAGE_DEFAULTS,
       toasts: [],
       selectRack: (id) => set((st) => (st.selectedRackId === id ? st : { selectedRackId: id, selectedEquipmentId: null, selectedPortId: null })),
       selectEquipment: (id, rackId) =>
@@ -101,6 +144,7 @@ export const useUiStore = create<UiStore>()(
       setLaptopOpen: (laptopOpen) => set({ laptopOpen }),
       openLaptopApp: (laptopApp) => set({ laptopApp, laptopOpen: true }),
       setTheme: (theme) => set({ theme }),
+      setPage: (patch) => set((st) => (Object.entries(patch).every(([k, v]) => st.page[k as keyof PageMemory] === v) ? st : { page: { ...st.page, ...patch } })),
       notify: (t) => {
         const id = ++toastSeq;
         set((st) => ({ toasts: [...st.toasts.slice(-3), { ...t, id }] }));
@@ -111,7 +155,25 @@ export const useUiStore = create<UiStore>()(
     }),
     {
       name: 'dct-sim-ui',
-      partialize: (st) => ({ devMode: st.devMode, trainingMode: st.trainingMode, rackSide: st.rackSide, dataHallView: st.dataHallView, showCables: st.showCables, theme: st.theme }),
+      partialize: (st) => ({
+        devMode: st.devMode,
+        trainingMode: st.trainingMode,
+        rackSide: st.rackSide,
+        dataHallView: st.dataHallView,
+        showCables: st.showCables,
+        theme: st.theme,
+        selectedRackId: st.selectedRackId,
+        selectedEquipmentId: st.selectedEquipmentId,
+        selectedComponentId: st.selectedComponentId,
+        selectedPortId: st.selectedPortId,
+        laptopApp: st.laptopApp,
+        page: st.page,
+      }),
+      // Fields added in later versions keep their defaults.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<UiStore>;
+        return { ...current, ...p, page: { ...current.page, ...(p.page ?? {}) } };
+      },
     },
   ),
 );

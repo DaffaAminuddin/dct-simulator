@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PortDetails } from '@/components/networking/PortDetails';
@@ -8,7 +8,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { WorkOrdersPage } from '@/pages/WorkOrdersPage';
 import { engine, useSimulationStore } from '@/stores/simulationStore';
 import { useProgressStore } from '@/stores/progressStore';
-import { useUiStore } from '@/stores/uiStore';
+import { PAGE_DEFAULTS, useUiStore } from '@/stores/uiStore';
 import { AppRoutes } from '@/App';
 
 beforeEach(() => {
@@ -129,6 +129,49 @@ describe('Work orders', () => {
     fireEvent.click(screen.getByRole('button', { name: /Run validation/ }));
     expect(screen.getByText('PSU 2 receives AC input')).toBeInTheDocument();
     expect(useUiStore.getState().toasts.at(-1)?.title).toBe('Validation failed');
+  });
+});
+
+describe('Last-open memory and device information', () => {
+  const at = (path: string) =>
+    render(
+      <MemoryRouter initialEntries={[path]}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+  it('Work Orders reopens the last ticket; the queue starts with the easiest one', () => {
+    useUiStore.setState({ page: PAGE_DEFAULTS });
+    const first = at('/workorders');
+    const queue = within(screen.getByRole('heading', { name: 'Ticket queue' }).closest('section') as HTMLElement).getAllByRole('button');
+    expect(queue[0]).toHaveTextContent('DCT-0002');
+    first.unmount();
+    at('/workorders/DCT-0005').unmount();
+    at('/workorders');
+    expect(screen.getByRole('heading', { name: 'Work order #DCT-0005' })).toBeInTheDocument();
+    const device = screen.getByRole('region', { name: 'Affected device' });
+    expect(within(device).getAllByText('dh1-r02-s03').length).toBeGreaterThan(0);
+    expect(within(device).getAllByText(/^10\.10\.2\.\d+\/16$/).length).toBeGreaterThan(0);
+  });
+
+  it('Hardware Lab, GPU Diagnostics and Network Lab remember their selection', () => {
+    useUiStore.setState({ page: PAGE_DEFAULTS });
+    at('/hardware/srv-r03-g01').unmount();
+    at('/hardware');
+    expect(screen.getByRole('combobox', { name: 'Equipment to inspect' })).toHaveValue('srv-r03-g01');
+    cleanup();
+    useUiStore.getState().setPage({ networkQuery: 'r02-n04' });
+    at('/network');
+    expect(screen.getByPlaceholderText(/host, port, cable/)).toHaveValue('r02-n04');
+  });
+
+  it('Rack Explorer shows the unit\'s part number, serial and addresses', () => {
+    useUiStore.setState({ selectedRackId: 'R01', selectedEquipmentId: 'srv-r01-02', page: PAGE_DEFAULTS });
+    at('/racks/R01');
+    const info = screen.getByTestId('device-info');
+    expect(within(info).getByText(engine.getState().equipment['srv-r01-02'].serial)).toBeInTheDocument();
+    expect(within(info).getByText('10.10.1.12/16')).toBeInTheDocument();
+    expect(within(info).getByText(/^SRV-\d{4}-/)).toBeInTheDocument();
   });
 });
 

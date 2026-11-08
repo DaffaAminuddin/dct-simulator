@@ -23,6 +23,8 @@ export interface WorkOrderDef {
   title: string;
   priority: Priority;
   location: { rackId: Id; u: string; equipmentId?: Id };
+  /** Device the ticket is about when it is not (yet) installed at the location (e.g. a server in the spares cage). */
+  deviceId?: Id;
   issue: string;
   symptoms: string[];
   objective: string;
@@ -49,7 +51,7 @@ function equipmentAt(s: SimulationState, rackId: Id, u: number): Id | undefined 
 
 const running = (s: SimulationState, id: Id | undefined) => !!id && s.equipment[id]?.state === 'os_running';
 
-export const WORK_ORDERS: WorkOrderDef[] = [
+const CATALOG: WorkOrderDef[] = [
   {
     id: 'DCT-0001',
     title: 'GPU initialization failure on GB200 compute tray',
@@ -191,6 +193,7 @@ export const WORK_ORDERS: WorkOrderDef[] = [
     title: 'Deploy a new compute node in R01',
     priority: 'P4',
     location: { rackId: 'R01', u: 'U18' },
+    deviceId: 'spare-srv-1u-01',
     issue: 'Capacity request: install the new RS-1100 (dh1-new-n01) from the spares cage into R01 U18 and bring it online.',
     symptoms: ['New server staged in inventory', 'R01 has open U at U18–U19'],
     objective: 'Rack, cable (A+B power, BMC, data) and power on the new node.',
@@ -265,6 +268,18 @@ export const WORK_ORDERS: WorkOrderDef[] = [
     targetTimeS: 300,
   },
 ];
+
+export const DIFFICULTY_ORDER: WorkOrderDef['difficulty'][] = ['beginner', 'intermediate', 'advanced'];
+
+/** The ticket queue, easiest first: by difficulty, then by target time, then by id. */
+export const WORK_ORDERS: WorkOrderDef[] = [...CATALOG].sort(
+  (a, b) => DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty) || a.targetTimeS - b.targetTimeS || a.id.localeCompare(b.id),
+);
+
+/** Device a ticket is about (installed equipment at its location, or a staged device). */
+export function workOrderDevice(w: WorkOrderDef): Id | undefined {
+  return w.location.equipmentId ?? w.deviceId;
+}
 
 export function getWorkOrder(id: string): WorkOrderDef | undefined {
   return WORK_ORDERS.find((w) => w.id === id);

@@ -1,6 +1,8 @@
 import { CheckCircle2, Circle, ExternalLink } from 'lucide-react';
+import { useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { Page } from '@/components/layout/AppShell';
+import { usePageMemory } from '@/hooks/usePageMemory';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AccuracyBadge, PhaseNotice } from '@/components/ui/misc';
@@ -15,7 +17,9 @@ export function LearningCenterPage() {
   const navigate = useNavigate();
   const done = useProgressStore((s) => s.modulesCompleted);
   const toggle = useProgressStore((s) => s.toggleModule);
-  const m = MODULES.find((x) => x.id === moduleId) ?? MODULES[0];
+  const [lastModule, setLastModule] = usePageMemory('moduleId');
+  const m = MODULES.find((x) => x.id === moduleId) ?? MODULES.find((x) => x.id === lastModule) ?? MODULES[0];
+  useEffect(() => setLastModule(m.id), [m.id, setLastModule]);
 
   return (
     <Page>

@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Page } from '@/components/layout/AppShell';
+import { usePageMemory } from '@/hooks/usePageMemory';
 import { Badge } from '@/components/ui/badge';
 import { Callout, Mono, PhaseNotice } from '@/components/ui/misc';
 import { Panel } from '@/components/ui/panel';
@@ -26,7 +27,8 @@ export function GpuDiagnosticsPage() {
   const devMode = useDevMode();
   const lastEq = useUiStore((st) => st.selectedEquipmentId);
   const nodes = useMemo(() => Object.values(s.equipment).filter((e) => hasGpus(e) && e.location.kind === 'rack'), [s.equipment]);
-  const [nodeId, setNodeId] = useState(() => (lastEq && nodes.some((n) => n.id === lastEq) ? lastEq : 'ct-r05-07'));
+  const [remembered, setNodeId] = usePageMemory('gpuNodeId');
+  const nodeId = remembered && nodes.some((n) => n.id === remembered) ? remembered : lastEq && nodes.some((n) => n.id === lastEq) ? lastEq : 'ct-r05-07';
   const eq = s.equipment[nodeId] ?? nodes[0];
   const driver = channelStatus(s, eq, 'driver');
   const model = getEquipmentModel(eq.modelId);

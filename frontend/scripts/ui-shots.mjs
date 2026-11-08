@@ -16,16 +16,21 @@ const browser = await chromium.launch({ channel: process.env.PW_CHANNEL ?? 'msed
 for (const theme of themes) {
   for (const w of widths) {
     const ctx = await browser.newContext({ viewport: { width: w, height: w < 768 ? 844 : 912 } });
-    await ctx.addInitScript((t) => {
-      try {
-        const raw = localStorage.getItem('dct-sim-ui');
-        const v = raw ? JSON.parse(raw) : { state: {}, version: 0 };
-        v.state = { ...(v.state ?? {}), theme: t };
-        localStorage.setItem('dct-sim-ui', JSON.stringify(v));
-      } catch {
-        /* ignore */
-      }
-    }, theme);
+    // UISTATE='{"selectedEquipmentId":"srv-r01-02"}' preloads UI selections (persisted ui store).
+    const extra = JSON.parse(process.env.UISTATE || '{}');
+    await ctx.addInitScript(
+      ([t, more]) => {
+        try {
+          const raw = localStorage.getItem('dct-sim-ui');
+          const v = raw ? JSON.parse(raw) : { state: {}, version: 0 };
+          v.state = { ...(v.state ?? {}), ...more, theme: t };
+          localStorage.setItem('dct-sim-ui', JSON.stringify(v));
+        } catch {
+          /* ignore */
+        }
+      },
+      [theme, extra],
+    );
     const page = await ctx.newPage();
     const errors = [];
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));

@@ -142,8 +142,9 @@ export function RackExplorerPage() {
             />
           </div>
         </div>
-        <div className="min-w-0 space-y-3">
-          {selectedPortId && <PortDetails portId={selectedPortId} onClose={() => selectPort(null)} onJump={jumpToPort} />}
+        {/* Scrolls on its own so the rack elevation (drop target for cables) stays in view. */}
+        <div className="min-w-0 space-y-3 xl:max-h-[calc(100vh-150px)] xl:overflow-y-auto xl:pr-1">
+          {selectedPortId &&<PortDetails portId={selectedPortId} onClose={() => selectPort(null)} onJump={jumpToPort} />}
           {eqInThisRack && selectedEquipmentId ? (
             <EquipmentDetails equipmentId={selectedEquipmentId} onClose={() => selectEquipment(null)} onSelectPort={(pid) => jumpToPort(pid)} />
           ) : (

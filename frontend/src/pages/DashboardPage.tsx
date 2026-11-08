@@ -23,6 +23,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { LineChart, Sparkline } from '@/components/dashboard/charts';
 import { Page } from '@/components/layout/AppShell';
+import { usePageMemory } from '@/hooks/usePageMemory';
 import { StatusDot } from '@/components/ui/badge';
 import { Select } from '@/components/ui/select';
 import { MODULES } from '@/data/learning/modules';
@@ -88,8 +89,8 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const samples = useTelemetryStore((st) => st.samples);
   const progress = useProgressStore();
-  const [scope, setScope] = useState('all');
-  const [win, setWin] = useState('900000');
+  const [scope, setScope] = usePageMemory('dashboardScope');
+  const [win, setWin] = usePageMemory('dashboardWindow');
   const [feed, setFeed] = useState<'alerts' | 'activity'>('activity');
 
   const series = useMemo(() => windowed(samples, Number(win)), [samples, win]);

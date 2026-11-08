@@ -1,4 +1,5 @@
 import { ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
+import { CopyButton } from '@/components/device/DeviceInfoCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AccuracyBadge, Callout, Mono } from '@/components/ui/misc';
@@ -7,9 +8,19 @@ import { getComponentModel } from '@/data/hardware/componentCatalog';
 import { getSlotDef } from '@/data/hardware/equipmentCatalog';
 import { channelStatus, componentHealthVia, componentLed, conditionsVia, hasPhysicalLed } from '@/simulation/diagnostics/DiagnosticEngine';
 import { compatibleSpares } from '@/simulation/hardware/Compatibility';
+import { componentPartNumber } from '@/simulation/inventory/DeviceInfo';
 import { useAct } from '@/stores/hardwareStore';
 import type { Equipment, SimulationState } from '@/types/simulation';
 import { formatTemp, formatW, HEALTH_TEXT, healthTone, severityTone } from '@/utils/format';
+
+function CopyValue({ value, label }: { value: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Mono>{value}</Mono>
+      <CopyButton value={value} label={label} />
+    </span>
+  );
+}
 
 function specLabel(key: string): string {
   const spaced = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([a-z])(\d)/g, '$1 $2');
@@ -54,7 +65,7 @@ export function ComponentDetails({ s, eq, slotId, devMode }: { s: SimulationStat
                 return (
                   <li key={id} className="flex items-center gap-2 rounded-chip border border-border bg-surface-2 px-2 py-1 text-[12px]">
                     <span className="min-w-0 flex-1 truncate">
-                      {getComponentModel(c.modelId).name} <Mono className="text-subtle">{c.serial}</Mono>
+                      {getComponentModel(c.modelId).name} <Mono className="text-subtle">PN {componentPartNumber(c.modelId)} · SN {c.serial}</Mono>
                     </span>
                     <Button size="xs" variant="primary" onClick={() => act({ type: 'component/install', componentId: id, equipmentId: eq.id, slotId }, `Installed in ${slot.label}`)}>
                       <ArrowDownToLine /> Install
@@ -78,9 +89,10 @@ export function ComponentDetails({ s, eq, slotId, devMode }: { s: SimulationStat
   const g = comp.gpu;
 
   const rows: [string, React.ReactNode][] = [
-    ['Component ID', <Mono key="id">{comp.id}</Mono>],
-    ['Serial (simulated)', <Mono key="sn">{comp.serial}</Mono>],
     ['Model', m.name],
+    ['Part number', <CopyValue key="pn" value={componentPartNumber(comp.modelId)} label="Part number" />],
+    ['Serial (SN)', <CopyValue key="sn" value={comp.serial} label="Serial" />],
+    ['Component ID', <Mono key="id">{comp.id}</Mono>],
     ['Manufacturer', m.manufacturer],
     ['Form factor', m.formFactor],
     ['Installation', `Installed · ${slot.label} (${slot.access} access)`],

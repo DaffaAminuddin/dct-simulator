@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getWorkOrder, resolveSetup, WORK_ORDERS } from '@/data/workorders/workOrders';
+import { DIFFICULTY_ORDER, getWorkOrder, resolveSetup, WORK_ORDERS, workOrderDevice } from '@/data/workorders/workOrders';
 import { makeEngine, ok } from '@/test/engine';
 
 describe('work orders', () => {
@@ -10,6 +10,25 @@ describe('work orders', () => {
     for (const w of WORK_ORDERS) {
       expect(w.tasks.length, w.id).toBeGreaterThan(0);
       for (const a of w.setup ?? []) expect(resolveSetup(e.getState(), a), w.id).not.toBeNull();
+    }
+  });
+
+  it('the queue runs from the easiest ticket to the hardest', () => {
+    const ranks = WORK_ORDERS.map((w) => DIFFICULTY_ORDER.indexOf(w.difficulty));
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+    expect(WORK_ORDERS[0].difficulty).toBe('beginner');
+    expect(WORK_ORDERS.at(-1)?.difficulty).toBe('advanced');
+    for (let i = 1; i < WORK_ORDERS.length; i++) {
+      if (WORK_ORDERS[i].difficulty === WORK_ORDERS[i - 1].difficulty) expect(WORK_ORDERS[i].targetTimeS).toBeGreaterThanOrEqual(WORK_ORDERS[i - 1].targetTimeS);
+    }
+  });
+
+  it('every ticket names a device that exists', () => {
+    const s = makeEngine().getState();
+    for (const w of WORK_ORDERS) {
+      const id = workOrderDevice(w);
+      expect(id, w.id).toBeDefined();
+      expect(s.equipment[id as string], w.id).toBeDefined();
     }
   });
 

@@ -190,6 +190,44 @@ events are tagged `devOnly` so that root causes stay hidden outside developer mo
 - `components/laptop/*` holds the laptop window (top-bar button) and its apps. Every probe is a
   pure read of the latest snapshot.
 
+### Last-open memory and device information
+
+- `uiStore.page` (`PageMemory`) remembers what each section had open: last work order and
+  learning module, Hardware Lab chassis and slot, GPU node, Network Lab filters, data hall
+  rack, camera preset and unit, equipment-details tab, inventory tab and dashboard filters. It is
+  persisted with the Rack Explorer selection (rack, unit, port, side) and the laptop app, so
+  leaving a section or reloading resumes the work. Pages read it with `usePageMemory(key)`.
+  Each section keeps its own state: picking a rack in the data hall does not move Rack
+  Explorer until the rack is opened there.
+- `simulation/inventory/DeviceInfo.ts` builds a unit's information sheet: hostname, model,
+  simulated part number, serial, asset tag, location, BMC / management address, data and
+  fabric interfaces (IP, MAC or InfiniBand address, far-end switch port) and firmware. It reuses
+  the terminal's address functions, so the UI and `ipmitool lan print` / `ip a` always agree.
+  `components/device/DeviceInfoCard.tsx` renders it with copy buttons in Rack Explorer, the
+  data hall unit list and the "Affected device" block of every work order.
+- The work-order queue (`WORK_ORDERS`) is sorted easiest first: by difficulty, then target time.
+
+### Terminal (Phase 3)
+
+- `simulation/terminal/` holds the framework-free terminal engine:
+  - `CommandParser.ts` turns a line into pipelines (quotes, `~`, `$VAR`, `|`, `;`, `&&`, `||`).
+  - `CommandRegistry.ts` lists every `CommandDef` (name, shells it exists in, `run(ctx)`).
+  - `CommandExecutor.ts` validates the session, runs pipelines (stdout → stdin), handles
+    `sudo` and tab completion.
+  - `Session.ts` is the frame stack (laptop → BMC / host via SSH, SOL or serial), prompts, and
+    `validateSession`, which drops hops the simulation has broken.
+  - `os/HostOs.ts` is the host OS view (interfaces, PCI, block devices, memory, processes,
+    services, kernel log, journal); `fs/VirtualFs.ts` builds the read-only filesystem from it.
+  - `commands/*.ts` implement the commands. A command receives the latest snapshot and may
+    call `ctx.dispatch(action)`; it never mutates state directly.
+- `stores/terminalStore.ts` keeps one session and its transcript. It re-validates the session
+  on every engine change, so a reboot or a pulled cable closes the SSH / SOL hop immediately.
+- `components/terminal/TerminalView.tsx` is the xterm.js view (lazy chunk). It only edits the
+  current line; every view renders the shared transcript, so the Terminal page and the laptop's
+  Terminal app stay in sync.
+- Probes (`ping`, `ssh`, `traceroute`) use `routeFrom(state, source, ip)` in
+  `networking/Reachability.ts`, with the laptop or a host OS as the source.
+
 ### Visual design system (`DESIGN.md`)
 
 - Tokens live in `src/index.css`: CSS variables in `:root` (light) with a `[data-theme='dark']`

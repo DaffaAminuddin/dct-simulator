@@ -79,9 +79,9 @@ add({
   cooling: 'liquid',
   hotSwap: false,
   fieldReplaceable: false,
-  specs: { cores: 72, coreType: 'Arm Neoverse V2', memory: 'LPDDR5X (on-module)', hostLink: 'NVLink-C2C' },
+  specs: { cores: 72, coreType: 'Arm Neoverse V2', memory: 'LPDDR5X (on-module)', memoryGB: 480, hostLink: 'NVLink-C2C' },
   accuracy: 'verified',
-  note: 'Core count and NVLink-C2C attach are published; power and thermal values are simulation values. Part of the superchip module, so it is not field-replaceable on its own in this simulator.',
+  note: 'Core count, the "up to 480 GB" LPDDR5X figure (the simulator always uses the maximum) and NVLink-C2C attach are published; power and thermal values are simulation values. Part of the superchip module, so it is not field-replaceable on its own in this simulator.',
   source: 'NVIDIA Grace CPU / GB200 NVL72 product pages',
 });
 

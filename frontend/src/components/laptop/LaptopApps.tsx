@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Callout, Mono } from '@/components/ui/misc';
 import { KV } from '@/components/ui/panel';
 import { Input, Select } from '@/components/ui/select';
-import { hash32 } from '@/simulation/core/util';
+import { macFor } from '@/simulation/core/util';
 import { prefixToMask } from '@/simulation/networking/ip';
 import { CREDENTIALS, type CredentialProfile, httpsGet, ping, type ProbeResult, sshConnect } from '@/simulation/networking/Reachability';
 import { snapshotCache } from '@/simulation/networking/Vlan';
@@ -40,11 +40,6 @@ function Why({ result }: { result: ProbeResult | null }) {
   );
 }
 
-export function macFor(serial: string): string {
-  const h = hash32(serial);
-  const h2 = hash32(`${serial}#mac`);
-  return ['02', (h & 255).toString(16), ((h >>> 8) & 255).toString(16), ((h >>> 16) & 255).toString(16), (h2 & 255).toString(16), ((h2 >>> 8) & 255).toString(16)].map((x) => x.padStart(2, '0')).join(':');
-}
 
 // ---------------------------------------------------------------------------
 export function NetworkApp() {

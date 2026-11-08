@@ -4,9 +4,10 @@
  * the BMC is unreachable). Developer mode adds ground truth.
  */
 import { Cpu, HardDrive, Lightbulb, LogOut, Power, RotateCcw, X } from 'lucide-react';
-import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { DeviceInfoCard } from '@/components/device/DeviceInfoCard';
 import { FaultInjectorPanel } from '@/components/diagnostics/FaultInjectorPanel';
+import { usePageMemory } from '@/hooks/usePageMemory';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AccuracyBadge, Callout, Mono } from '@/components/ui/misc';
@@ -18,6 +19,7 @@ import { getEquipmentModel } from '@/data/hardware/equipmentCatalog';
 import { installedComponents, isHost, isMainPowerOn, locationLabel, peerPort } from '@/simulation/core/SimulationState';
 import { channelStatus, componentHealthVia, conditionsVia, displayedHealth } from '@/simulation/diagnostics/DiagnosticEngine';
 import { bootPhaseLabel, bootRemainingS } from '@/simulation/hardware/Server';
+import { componentPartNumber } from '@/simulation/inventory/DeviceInfo';
 import { bmcReachability, peerLabel } from '@/simulation/networking/NetworkTopology';
 import { useAct, useDevMode, useEquipment } from '@/stores/hardwareStore';
 import { useSim } from '@/stores/simulationStore';
@@ -33,7 +35,9 @@ export function EquipmentDetails({ equipmentId, onClose, onSelectPort }: { equip
   const eq = useEquipment(equipmentId);
   const s = useSim((st) => st);
   const devMode = useDevMode();
-  const [tab, setTab] = useState<TabId>('overview');
+  const [tabMem, setTabMem] = usePageMemory('equipmentTab');
+  const tab = tabMem as TabId;
+  const setTab = (t: TabId) => setTabMem(t);
   if (!eq) return <EmptyState title="Equipment not found" />;
   const model = getEquipmentModel(eq.modelId);
   const host = isHost(eq);
@@ -149,15 +153,11 @@ function Overview({ s, eq }: { s: SimulationState; eq: Equipment }) {
   const model = getEquipmentModel(eq.modelId);
   const host = isHost(eq);
   const rows: [string, React.ReactNode][] = [
-    ['Serial', <Mono key="s">{eq.serial}</Mono>],
-    ['Asset tag', <Mono key="a">{eq.assetTag}</Mono>],
-    ['Model', model.name],
     ['Height', model.heightU ? `${model.heightU}U` : '0U'],
     ['Weight', `${model.weightKg} kg`],
     ['Cooling', model.cooling === 'liquid' ? 'Liquid (cold plates) + air' : 'Air'],
   ];
   if (host) {
-    rows.push(['Operating system', eq.software.os]);
     rows.push([
       'Workload',
       <Select key="w" aria-label="Workload profile" value={eq.workload} onChange={(e) => act({ type: 'equipment/setWorkload', equipmentId: eq.id, workload: e.target.value as WorkloadProfile })} className="h-6">
@@ -179,8 +179,12 @@ function Overview({ s, eq }: { s: SimulationState; eq: Equipment }) {
     }
   }
   return (
-    <div className="space-y-3">
-      <KV rows={rows} />
+    <div className="space-y-4">
+      <DeviceInfoCard equipmentId={eq.id} />
+      <div>
+        <div className="mb-1 text-[11px] font-semibold tracking-[0.08em] text-subtle uppercase">Physical and operating data</div>
+        <KV rows={rows} />
+      </div>
       <p className="text-[11.5px] leading-relaxed text-subtle">{model.description}</p>
     </div>
   );
@@ -222,7 +226,18 @@ function ComponentsTab({ s, eq, devMode }: { s: SimulationState; eq: Equipment; 
                     }}
                   >
                     <td className="py-1 pr-2 text-muted">{sl.label}</td>
-                    <td className="max-w-[200px] truncate py-1 pr-2">{c ? getComponentModel(c.modelId).name : <span className="text-subtle">empty</span>}</td>
+                    <td className="max-w-[220px] py-1 pr-2">
+                      {c ? (
+                        <>
+                          <div className="truncate">{getComponentModel(c.modelId).name}</div>
+                          <div className="truncate font-mono text-[10.5px] text-subtle">
+                            PN {componentPartNumber(c.modelId)} · SN {c.serial}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-subtle">empty</span>
+                      )}
+                    </td>
                     <td className="py-1 pr-2 text-muted">{c ? (bmcUp || devMode ? c.status.replace('_', ' ') : '—') : ''}</td>
                     <td className="py-1 pr-2 text-right font-mono tabular">{c && (bmcUp || devMode) && c.powered ? c.temperatureC.toFixed(0) : ''}</td>
                     <td className="py-1">{c && <Badge tone={healthTone(h)}>{HEALTH_TEXT[h]}</Badge>}</td>

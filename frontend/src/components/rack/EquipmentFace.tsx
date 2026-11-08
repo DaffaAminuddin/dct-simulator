@@ -7,6 +7,7 @@ import { memo } from 'react';
 import { getCableModel } from '@/data/cables/cableCatalog';
 import { getEquipmentModel } from '@/data/hardware/equipmentCatalog';
 import { componentLed, frontLeds } from '@/simulation/diagnostics/DiagnosticEngine';
+import { equipmentPartNumber } from '@/simulation/inventory/DeviceInfo';
 import type { PanelSide } from '@/types/catalog';
 import type { Component, Equipment, Port, SimulationState } from '@/types/simulation';
 import { cn } from '@/utils/cn';
@@ -124,6 +125,17 @@ function RearFeatures({ eq, heightPx }: { eq: Equipment; heightPx: number }) {
   return null;
 }
 
+/** Hover card: hostname, model, PN, SN, asset tag and management address. */
+function faceTooltip(s: SimulationState, eq: Equipment): string {
+  const bmc = eq.portIds.map((id) => s.ports[id]).find((p) => p?.role === 'bmc');
+  return [
+    `${eq.hostname} · ${getEquipmentModel(eq.modelId).shortName}`,
+    `PN ${equipmentPartNumber(eq.modelId)} · SN ${eq.serial}`,
+    `Asset ${eq.assetTag}`,
+    ...(bmc?.ip ? [`${eq.kind === 'switch' ? 'Mgmt' : 'BMC'} ${bmc.ip.address}`] : []),
+  ].join('\n');
+}
+
 function FaceInner({ s, eq, side, heightPx, selected, selectedPortId, devMode, onSelect, onSelectPort }: FaceProps) {
   const model = getEquipmentModel(eq.modelId);
   const leds = frontLeds(s, eq);
@@ -144,6 +156,7 @@ function FaceInner({ s, eq, side, heightPx, selected, selectedPortId, devMode, o
       role="button"
       tabIndex={0}
       aria-label={`${eq.hostname}${isBlank ? '' : `, ${model.shortName}`}`}
+      title={isBlank ? eq.hostname : faceTooltip(s, eq)}
       aria-pressed={selected}
       data-equipment={eq.id}
       onClick={() => onSelect(eq.id)}

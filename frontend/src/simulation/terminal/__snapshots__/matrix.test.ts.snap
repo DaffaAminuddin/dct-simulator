@@ -1,0 +1,573 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`command × fault matrix (dh1-r03-g01) > DIMM uncorrectable 1`] = `
+{
+  "ip -br link": "lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ens1f0np0        UP             02:c2:61:f8:46:28 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ens1f1np1        UP             02:55:63:f8:55:90 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp0s0           UP             1a:44:1a:57:be:03:fe:eb <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp1s0           UP             9f:84:0c:cb:99:68:d9:48 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp2s0           UP             b8:13:61:5d:c0:27:ee:a3 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp3s0           UP             9d:86:53:f1:cb:2e:86:21 <BROADCAST,MULTICAST,UP,LOWER_UP>",
+  "lsblk": "NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+nvme0n1       259:0  0 894.1G  0 disk
+├─nvme0n1p1   259:1  0     1G  0 part  /boot/efi
+└─nvme0n1p2   259:2  0   893G  0 part  /
+nvme1n1       259:3  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme2n1       259:4  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme3n1       259:5  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme4n1       259:6  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid",
+  "lspci": "00:00.0 Host bridge: Generic Root complex (simulated)
+01:00.0 Non-Volatile memory controller: Generic 960 GB NVMe boot SSD, M.2 2280
+02:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+03:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+04:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+05:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+0f:00.0 VGA compatible controller: Generic BMC video controller (reference)
+10:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+18:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+28:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+38:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+48:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+50:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+58:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+68:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+78:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+88:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+a0:00.0 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+a0:00.1 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+b0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+c0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+d0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+e0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)",
+  "nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total,clocks.sm --format=csv": "index, pci.bus_id, ecc.errors.uncorrected.volatile.total, clocks.current.sm [MHz]
+0, 00000000:18:00.0, 0, 1980 MHz
+1, 00000000:28:00.0, 0, 1980 MHz
+2, 00000000:38:00.0, 0, 1980 MHz
+3, 00000000:48:00.0, 0, 1980 MHz
+4, 00000000:58:00.0, 0, 1980 MHz
+5, 00000000:68:00.0, 0, 1980 MHz
+6, 00000000:78:00.0, 0, 1980 MHz
+7, 00000000:88:00.0, 0, 1980 MHz",
+  "nvidia-smi -L": "GPU 0: Reference SXM 80GB (UUID: GPU-438ecfc8-468e-d481-488e-d7a7478ed614)
+GPU 1: Reference SXM 80GB (UUID: GPU-8c804d43-8d80-4ed6-8f80-51fc9080538f)
+GPU 2: Reference SXM 80GB (UUID: GPU-95fa784b-96fa-79de-98fa-7d0499fa7e97)
+GPU 3: Reference SXM 80GB (UUID: GPU-13dda245-10dd-9d8c-0edd-9a660fdd9bf9)
+GPU 4: Reference SXM 80GB (UUID: GPU-5d862a2d-5a86-2574-5886-224e598623e1)
+GPU 5: Reference SXM 80GB (UUID: GPU-5be449ad-58e4-44f4-56e4-41ce57e44361)
+GPU 6: Reference SXM 80GB (UUID: GPU-f75bd9b9-f45b-d500-fa5b-de72fb5be005)
+GPU 7: Reference SXM 80GB (UUID: GPU-e933ddbb-ea33-df4e-ec33-e274ed33e407)",
+  "sudo dmesg -l err,warn": "[    4.620000] nvidia: loading out-of-tree module taints kernel.
+[4914137.000000] EDAC MC0: 1 UE memory read error on CPU0 DIMM C1 (page:0x8f6f3 offset:0x0 grain:64)",
+}
+`;
+
+exports[`command × fault matrix (dh1-r03-g01) > NVMe bay 1 failed 1`] = `
+{
+  "ip -br link": "lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ens1f0np0        UP             02:c2:61:f8:46:28 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ens1f1np1        UP             02:55:63:f8:55:90 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp0s0           UP             1a:44:1a:57:be:03:fe:eb <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp1s0           UP             9f:84:0c:cb:99:68:d9:48 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp2s0           UP             b8:13:61:5d:c0:27:ee:a3 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp3s0           UP             9d:86:53:f1:cb:2e:86:21 <BROADCAST,MULTICAST,UP,LOWER_UP>",
+  "lsblk": "NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+nvme0n1       259:0  0 894.1G  0 disk
+├─nvme0n1p1   259:1  0     1G  0 part /boot/efi
+└─nvme0n1p2   259:2  0   893G  0 part /
+nvme1n1       259:3  0   3.5T  0 disk
+nvme3n1       259:4  0   3.5T  0 disk
+nvme4n1       259:5  0   3.5T  0 disk",
+  "lspci": "00:00.0 Host bridge: Generic Root complex (simulated)
+01:00.0 Non-Volatile memory controller: Generic 960 GB NVMe boot SSD, M.2 2280
+02:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+04:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+05:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+0f:00.0 VGA compatible controller: Generic BMC video controller (reference)
+10:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+18:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+28:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+38:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+48:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+50:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+58:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+68:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+78:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+88:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+a0:00.0 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+a0:00.1 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+b0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+c0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+d0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+e0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)",
+  "nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total,clocks.sm --format=csv": "index, pci.bus_id, ecc.errors.uncorrected.volatile.total, clocks.current.sm [MHz]
+0, 00000000:18:00.0, 0, 1980 MHz
+1, 00000000:28:00.0, 0, 1980 MHz
+2, 00000000:38:00.0, 0, 1980 MHz
+3, 00000000:48:00.0, 0, 1980 MHz
+4, 00000000:58:00.0, 0, 1980 MHz
+5, 00000000:68:00.0, 0, 1980 MHz
+6, 00000000:78:00.0, 0, 1980 MHz
+7, 00000000:88:00.0, 0, 1980 MHz",
+  "nvidia-smi -L": "GPU 0: Reference SXM 80GB (UUID: GPU-438ecfc8-468e-d481-488e-d7a7478ed614)
+GPU 1: Reference SXM 80GB (UUID: GPU-8c804d43-8d80-4ed6-8f80-51fc9080538f)
+GPU 2: Reference SXM 80GB (UUID: GPU-95fa784b-96fa-79de-98fa-7d0499fa7e97)
+GPU 3: Reference SXM 80GB (UUID: GPU-13dda245-10dd-9d8c-0edd-9a660fdd9bf9)
+GPU 4: Reference SXM 80GB (UUID: GPU-5d862a2d-5a86-2574-5886-224e598623e1)
+GPU 5: Reference SXM 80GB (UUID: GPU-5be449ad-58e4-44f4-56e4-41ce57e44361)
+GPU 6: Reference SXM 80GB (UUID: GPU-f75bd9b9-f45b-d500-fa5b-de72fb5be005)
+GPU 7: Reference SXM 80GB (UUID: GPU-e933ddbb-ea33-df4e-ec33-e274ed33e407)",
+  "sudo dmesg -l err,warn": "[    4.620000] nvidia: loading out-of-tree module taints kernel.
+[4914137.000000] nvme nvme2: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0xffff",
+}
+`;
+
+exports[`command × fault matrix (dh1-r03-g01) > OCP NIC failed 1`] = `
+{
+  "ip -br link": "lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ibp0s0           UP             1a:44:1a:57:be:03:fe:eb <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp1s0           UP             9f:84:0c:cb:99:68:d9:48 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp2s0           UP             b8:13:61:5d:c0:27:ee:a3 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp3s0           UP             9d:86:53:f1:cb:2e:86:21 <BROADCAST,MULTICAST,UP,LOWER_UP>",
+  "lsblk": "NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+nvme0n1       259:0  0 894.1G  0 disk
+├─nvme0n1p1   259:1  0     1G  0 part  /boot/efi
+└─nvme0n1p2   259:2  0   893G  0 part  /
+nvme1n1       259:3  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme2n1       259:4  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme3n1       259:5  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme4n1       259:6  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid",
+  "lspci": "00:00.0 Host bridge: Generic Root complex (simulated)
+01:00.0 Non-Volatile memory controller: Generic 960 GB NVMe boot SSD, M.2 2280
+02:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+03:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+04:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+05:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+0f:00.0 VGA compatible controller: Generic BMC video controller (reference)
+10:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+18:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+28:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+38:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+48:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+50:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+58:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+68:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+78:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+88:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+b0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+c0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+d0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+e0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)",
+  "nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total,clocks.sm --format=csv": "index, pci.bus_id, ecc.errors.uncorrected.volatile.total, clocks.current.sm [MHz]
+0, 00000000:18:00.0, 0, 1980 MHz
+1, 00000000:28:00.0, 0, 1980 MHz
+2, 00000000:38:00.0, 0, 1980 MHz
+3, 00000000:48:00.0, 0, 1980 MHz
+4, 00000000:58:00.0, 0, 1980 MHz
+5, 00000000:68:00.0, 0, 1980 MHz
+6, 00000000:78:00.0, 0, 1980 MHz
+7, 00000000:88:00.0, 0, 1980 MHz",
+  "nvidia-smi -L": "GPU 0: Reference SXM 80GB (UUID: GPU-438ecfc8-468e-d481-488e-d7a7478ed614)
+GPU 1: Reference SXM 80GB (UUID: GPU-8c804d43-8d80-4ed6-8f80-51fc9080538f)
+GPU 2: Reference SXM 80GB (UUID: GPU-95fa784b-96fa-79de-98fa-7d0499fa7e97)
+GPU 3: Reference SXM 80GB (UUID: GPU-13dda245-10dd-9d8c-0edd-9a660fdd9bf9)
+GPU 4: Reference SXM 80GB (UUID: GPU-5d862a2d-5a86-2574-5886-224e598623e1)
+GPU 5: Reference SXM 80GB (UUID: GPU-5be449ad-58e4-44f4-56e4-41ce57e44361)
+GPU 6: Reference SXM 80GB (UUID: GPU-f75bd9b9-f45b-d500-fa5b-de72fb5be005)
+GPU 7: Reference SXM 80GB (UUID: GPU-e933ddbb-ea33-df4e-ec33-e274ed33e407)",
+  "sudo dmesg -l err,warn": "[    4.620000] nvidia: loading out-of-tree module taints kernel.
+[4914137.000000] pcieport 0000:00:01.0: AER: OCP 3.0 NIC slot: adapter failure",
+}
+`;
+
+exports[`command × fault matrix (dh1-r03-g01) > gpu0 fallen off the bus 1`] = `
+{
+  "ip -br link": "lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ens1f0np0        UP             02:c2:61:f8:46:28 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ens1f1np1        UP             02:55:63:f8:55:90 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp0s0           UP             1a:44:1a:57:be:03:fe:eb <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp1s0           UP             9f:84:0c:cb:99:68:d9:48 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp2s0           UP             b8:13:61:5d:c0:27:ee:a3 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp3s0           UP             9d:86:53:f1:cb:2e:86:21 <BROADCAST,MULTICAST,UP,LOWER_UP>",
+  "lsblk": "NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+nvme0n1       259:0  0 894.1G  0 disk
+├─nvme0n1p1   259:1  0     1G  0 part  /boot/efi
+└─nvme0n1p2   259:2  0   893G  0 part  /
+nvme1n1       259:3  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme2n1       259:4  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme3n1       259:5  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme4n1       259:6  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid",
+  "lspci": "00:00.0 Host bridge: Generic Root complex (simulated)
+01:00.0 Non-Volatile memory controller: Generic 960 GB NVMe boot SSD, M.2 2280
+02:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+03:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+04:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+05:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+0f:00.0 VGA compatible controller: Generic BMC video controller (reference)
+10:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+18:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference) (rev ff)
+28:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+38:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+48:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+50:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+58:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+68:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+78:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+88:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+a0:00.0 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+a0:00.1 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+b0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+c0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+d0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+e0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)",
+  "nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total,clocks.sm --format=csv": "index, pci.bus_id, ecc.errors.uncorrected.volatile.total, clocks.current.sm [MHz]
+[GPU requires reset], [GPU requires reset], [GPU requires reset], [GPU requires reset]
+1, 00000000:28:00.0, 0, 1980 MHz
+2, 00000000:38:00.0, 0, 1980 MHz
+3, 00000000:48:00.0, 0, 1980 MHz
+4, 00000000:58:00.0, 0, 1980 MHz
+5, 00000000:68:00.0, 0, 1980 MHz
+6, 00000000:78:00.0, 0, 1980 MHz
+7, 00000000:88:00.0, 0, 1980 MHz",
+  "nvidia-smi -L": "Unable to determine the device handle for GPU00000000:18:00.0: Unknown Error
+GPU 1: Reference SXM 80GB (UUID: GPU-8c804d43-8d80-4ed6-8f80-51fc9080538f)
+GPU 2: Reference SXM 80GB (UUID: GPU-95fa784b-96fa-79de-98fa-7d0499fa7e97)
+GPU 3: Reference SXM 80GB (UUID: GPU-13dda245-10dd-9d8c-0edd-9a660fdd9bf9)
+GPU 4: Reference SXM 80GB (UUID: GPU-5d862a2d-5a86-2574-5886-224e598623e1)
+GPU 5: Reference SXM 80GB (UUID: GPU-5be449ad-58e4-44f4-56e4-41ce57e44361)
+GPU 6: Reference SXM 80GB (UUID: GPU-f75bd9b9-f45b-d500-fa5b-de72fb5be005)
+GPU 7: Reference SXM 80GB (UUID: GPU-e933ddbb-ea33-df4e-ec33-e274ed33e407)",
+  "sudo dmesg -l err,warn": "[    4.620000] nvidia: loading out-of-tree module taints kernel.
+[4914137.000000] NVRM: Xid (PCI:0000:18:00): 79, pid='<unknown>', name=<unknown>, GPU has fallen off the bus",
+}
+`;
+
+exports[`command × fault matrix (dh1-r03-g01) > gpu2 HBM uncorrectable ECC 1`] = `
+{
+  "ip -br link": "lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ens1f0np0        UP             02:c2:61:f8:46:28 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ens1f1np1        UP             02:55:63:f8:55:90 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp0s0           UP             1a:44:1a:57:be:03:fe:eb <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp1s0           UP             9f:84:0c:cb:99:68:d9:48 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp2s0           UP             b8:13:61:5d:c0:27:ee:a3 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp3s0           UP             9d:86:53:f1:cb:2e:86:21 <BROADCAST,MULTICAST,UP,LOWER_UP>",
+  "lsblk": "NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+nvme0n1       259:0  0 894.1G  0 disk
+├─nvme0n1p1   259:1  0     1G  0 part  /boot/efi
+└─nvme0n1p2   259:2  0   893G  0 part  /
+nvme1n1       259:3  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme2n1       259:4  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme3n1       259:5  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme4n1       259:6  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid",
+  "lspci": "00:00.0 Host bridge: Generic Root complex (simulated)
+01:00.0 Non-Volatile memory controller: Generic 960 GB NVMe boot SSD, M.2 2280
+02:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+03:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+04:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+05:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+0f:00.0 VGA compatible controller: Generic BMC video controller (reference)
+10:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+18:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+28:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+38:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+48:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+50:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+58:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+68:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+78:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+88:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+a0:00.0 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+a0:00.1 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+b0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+c0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+d0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+e0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)",
+  "nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total,clocks.sm --format=csv": "index, pci.bus_id, ecc.errors.uncorrected.volatile.total, clocks.current.sm [MHz]
+0, 00000000:18:00.0, 0, 1980 MHz
+1, 00000000:28:00.0, 0, 1980 MHz
+2, 00000000:38:00.0, 4, 337 MHz
+3, 00000000:48:00.0, 0, 1980 MHz
+4, 00000000:58:00.0, 0, 1980 MHz
+5, 00000000:68:00.0, 0, 1980 MHz
+6, 00000000:78:00.0, 0, 1980 MHz
+7, 00000000:88:00.0, 0, 1980 MHz",
+  "nvidia-smi -L": "GPU 0: Reference SXM 80GB (UUID: GPU-438ecfc8-468e-d481-488e-d7a7478ed614)
+GPU 1: Reference SXM 80GB (UUID: GPU-8c804d43-8d80-4ed6-8f80-51fc9080538f)
+GPU 2: Reference SXM 80GB (UUID: GPU-95fa784b-96fa-79de-98fa-7d0499fa7e97)
+GPU 3: Reference SXM 80GB (UUID: GPU-13dda245-10dd-9d8c-0edd-9a660fdd9bf9)
+GPU 4: Reference SXM 80GB (UUID: GPU-5d862a2d-5a86-2574-5886-224e598623e1)
+GPU 5: Reference SXM 80GB (UUID: GPU-5be449ad-58e4-44f4-56e4-41ce57e44361)
+GPU 6: Reference SXM 80GB (UUID: GPU-f75bd9b9-f45b-d500-fa5b-de72fb5be005)
+GPU 7: Reference SXM 80GB (UUID: GPU-e933ddbb-ea33-df4e-ec33-e274ed33e407)",
+  "sudo dmesg -l err,warn": "[    4.620000] nvidia: loading out-of-tree module taints kernel.
+[4914137.000000] NVRM: Xid (PCI:0000:38:00): 48, pid='<unknown>', name=<unknown>, Double Bit ECC Error",
+}
+`;
+
+exports[`command × fault matrix (dh1-r03-g01) > gpu3 NVLink down 1`] = `
+{
+  "ip -br link": "lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ens1f0np0        UP             02:c2:61:f8:46:28 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ens1f1np1        UP             02:55:63:f8:55:90 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp0s0           UP             1a:44:1a:57:be:03:fe:eb <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp1s0           UP             9f:84:0c:cb:99:68:d9:48 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp2s0           UP             b8:13:61:5d:c0:27:ee:a3 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp3s0           UP             9d:86:53:f1:cb:2e:86:21 <BROADCAST,MULTICAST,UP,LOWER_UP>",
+  "lsblk": "NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+nvme0n1       259:0  0 894.1G  0 disk
+├─nvme0n1p1   259:1  0     1G  0 part  /boot/efi
+└─nvme0n1p2   259:2  0   893G  0 part  /
+nvme1n1       259:3  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme2n1       259:4  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme3n1       259:5  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme4n1       259:6  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid",
+  "lspci": "00:00.0 Host bridge: Generic Root complex (simulated)
+01:00.0 Non-Volatile memory controller: Generic 960 GB NVMe boot SSD, M.2 2280
+02:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+03:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+04:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+05:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+0f:00.0 VGA compatible controller: Generic BMC video controller (reference)
+10:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+18:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+28:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+38:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+48:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+50:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+58:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+68:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+78:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+88:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+a0:00.0 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+a0:00.1 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+b0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+c0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+d0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+e0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)",
+  "nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total,clocks.sm --format=csv": "index, pci.bus_id, ecc.errors.uncorrected.volatile.total, clocks.current.sm [MHz]
+0, 00000000:18:00.0, 0, 1980 MHz
+1, 00000000:28:00.0, 0, 1980 MHz
+2, 00000000:38:00.0, 0, 1980 MHz
+3, 00000000:48:00.0, 0, 1980 MHz
+4, 00000000:58:00.0, 0, 1980 MHz
+5, 00000000:68:00.0, 0, 1980 MHz
+6, 00000000:78:00.0, 0, 1980 MHz
+7, 00000000:88:00.0, 0, 1980 MHz",
+  "nvidia-smi -L": "GPU 0: Reference SXM 80GB (UUID: GPU-438ecfc8-468e-d481-488e-d7a7478ed614)
+GPU 1: Reference SXM 80GB (UUID: GPU-8c804d43-8d80-4ed6-8f80-51fc9080538f)
+GPU 2: Reference SXM 80GB (UUID: GPU-95fa784b-96fa-79de-98fa-7d0499fa7e97)
+GPU 3: Reference SXM 80GB (UUID: GPU-13dda245-10dd-9d8c-0edd-9a660fdd9bf9)
+GPU 4: Reference SXM 80GB (UUID: GPU-5d862a2d-5a86-2574-5886-224e598623e1)
+GPU 5: Reference SXM 80GB (UUID: GPU-5be449ad-58e4-44f4-56e4-41ce57e44361)
+GPU 6: Reference SXM 80GB (UUID: GPU-f75bd9b9-f45b-d500-fa5b-de72fb5be005)
+GPU 7: Reference SXM 80GB (UUID: GPU-e933ddbb-ea33-df4e-ec33-e274ed33e407)",
+  "sudo dmesg -l err,warn": "[    4.620000] nvidia: loading out-of-tree module taints kernel.
+[4914137.000000] NVRM: Xid (PCI:0000:48:00): 74, pid='<unknown>', name=<unknown>, NVLink Error",
+}
+`;
+
+exports[`command × fault matrix (dh1-r03-g01) > gpu5 Xid 119 1`] = `
+{
+  "ip -br link": "lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ens1f0np0        UP             02:c2:61:f8:46:28 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ens1f1np1        UP             02:55:63:f8:55:90 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp0s0           UP             1a:44:1a:57:be:03:fe:eb <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp1s0           UP             9f:84:0c:cb:99:68:d9:48 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp2s0           UP             b8:13:61:5d:c0:27:ee:a3 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp3s0           UP             9d:86:53:f1:cb:2e:86:21 <BROADCAST,MULTICAST,UP,LOWER_UP>",
+  "lsblk": "NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+nvme0n1       259:0  0 894.1G  0 disk
+├─nvme0n1p1   259:1  0     1G  0 part  /boot/efi
+└─nvme0n1p2   259:2  0   893G  0 part  /
+nvme1n1       259:3  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme2n1       259:4  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme3n1       259:5  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme4n1       259:6  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid",
+  "lspci": "00:00.0 Host bridge: Generic Root complex (simulated)
+01:00.0 Non-Volatile memory controller: Generic 960 GB NVMe boot SSD, M.2 2280
+02:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+03:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+04:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+05:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+0f:00.0 VGA compatible controller: Generic BMC video controller (reference)
+10:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+18:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+28:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+38:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+48:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+50:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+58:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+68:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+78:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+88:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+a0:00.0 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+a0:00.1 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+b0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+c0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+d0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+e0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)",
+  "nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total,clocks.sm --format=csv": "index, pci.bus_id, ecc.errors.uncorrected.volatile.total, clocks.current.sm [MHz]
+0, 00000000:18:00.0, 0, 1980 MHz
+1, 00000000:28:00.0, 0, 1980 MHz
+2, 00000000:38:00.0, 0, 1980 MHz
+3, 00000000:48:00.0, 0, 1980 MHz
+4, 00000000:58:00.0, 0, 1980 MHz
+5, 00000000:68:00.0, 0, 337 MHz
+6, 00000000:78:00.0, 0, 1980 MHz
+7, 00000000:88:00.0, 0, 1980 MHz",
+  "nvidia-smi -L": "GPU 0: Reference SXM 80GB (UUID: GPU-438ecfc8-468e-d481-488e-d7a7478ed614)
+GPU 1: Reference SXM 80GB (UUID: GPU-8c804d43-8d80-4ed6-8f80-51fc9080538f)
+GPU 2: Reference SXM 80GB (UUID: GPU-95fa784b-96fa-79de-98fa-7d0499fa7e97)
+GPU 3: Reference SXM 80GB (UUID: GPU-13dda245-10dd-9d8c-0edd-9a660fdd9bf9)
+GPU 4: Reference SXM 80GB (UUID: GPU-5d862a2d-5a86-2574-5886-224e598623e1)
+GPU 5: Reference SXM 80GB (UUID: GPU-5be449ad-58e4-44f4-56e4-41ce57e44361)
+GPU 6: Reference SXM 80GB (UUID: GPU-f75bd9b9-f45b-d500-fa5b-de72fb5be005)
+GPU 7: Reference SXM 80GB (UUID: GPU-e933ddbb-ea33-df4e-ec33-e274ed33e407)",
+  "sudo dmesg -l err,warn": "[    4.620000] nvidia: loading out-of-tree module taints kernel.
+[4914137.000000] NVRM: Xid (PCI:0000:68:00): 119, pid='<unknown>', name=<unknown>, GSP RPC timeout",
+}
+`;
+
+exports[`command × fault matrix (dh1-r03-g01) > healthy 1`] = `
+{
+  "ip -br link": "lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ens1f0np0        UP             02:c2:61:f8:46:28 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ens1f1np1        UP             02:55:63:f8:55:90 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp0s0           UP             1a:44:1a:57:be:03:fe:eb <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp1s0           UP             9f:84:0c:cb:99:68:d9:48 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp2s0           UP             b8:13:61:5d:c0:27:ee:a3 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp3s0           UP             9d:86:53:f1:cb:2e:86:21 <BROADCAST,MULTICAST,UP,LOWER_UP>",
+  "lsblk": "NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+nvme0n1       259:0  0 894.1G  0 disk
+├─nvme0n1p1   259:1  0     1G  0 part  /boot/efi
+└─nvme0n1p2   259:2  0   893G  0 part  /
+nvme1n1       259:3  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme2n1       259:4  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme3n1       259:5  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme4n1       259:6  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid",
+  "lspci": "00:00.0 Host bridge: Generic Root complex (simulated)
+01:00.0 Non-Volatile memory controller: Generic 960 GB NVMe boot SSD, M.2 2280
+02:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+03:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+04:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+05:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+0f:00.0 VGA compatible controller: Generic BMC video controller (reference)
+10:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+18:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+28:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+38:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+48:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+50:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+58:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+68:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+78:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+88:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+a0:00.0 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+a0:00.1 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+b0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+c0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+d0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+e0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)",
+  "nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total,clocks.sm --format=csv": "index, pci.bus_id, ecc.errors.uncorrected.volatile.total, clocks.current.sm [MHz]
+0, 00000000:18:00.0, 0, 1980 MHz
+1, 00000000:28:00.0, 0, 1980 MHz
+2, 00000000:38:00.0, 0, 1980 MHz
+3, 00000000:48:00.0, 0, 1980 MHz
+4, 00000000:58:00.0, 0, 1980 MHz
+5, 00000000:68:00.0, 0, 1980 MHz
+6, 00000000:78:00.0, 0, 1980 MHz
+7, 00000000:88:00.0, 0, 1980 MHz",
+  "nvidia-smi -L": "GPU 0: Reference SXM 80GB (UUID: GPU-438ecfc8-468e-d481-488e-d7a7478ed614)
+GPU 1: Reference SXM 80GB (UUID: GPU-8c804d43-8d80-4ed6-8f80-51fc9080538f)
+GPU 2: Reference SXM 80GB (UUID: GPU-95fa784b-96fa-79de-98fa-7d0499fa7e97)
+GPU 3: Reference SXM 80GB (UUID: GPU-13dda245-10dd-9d8c-0edd-9a660fdd9bf9)
+GPU 4: Reference SXM 80GB (UUID: GPU-5d862a2d-5a86-2574-5886-224e598623e1)
+GPU 5: Reference SXM 80GB (UUID: GPU-5be449ad-58e4-44f4-56e4-41ce57e44361)
+GPU 6: Reference SXM 80GB (UUID: GPU-f75bd9b9-f45b-d500-fa5b-de72fb5be005)
+GPU 7: Reference SXM 80GB (UUID: GPU-e933ddbb-ea33-df4e-ec33-e274ed33e407)",
+  "sudo dmesg -l err,warn": "[    4.620000] nvidia: loading out-of-tree module taints kernel.",
+}
+`;
+
+exports[`command × fault matrix (dh1-r03-g01) > riser1 failed 1`] = `
+{
+  "ip -br link": "lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>
+ens1f0np0        UP             02:c2:61:f8:46:28 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ens1f1np1        UP             02:55:63:f8:55:90 <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp0s0           UP             1a:44:1a:57:be:03:fe:eb <BROADCAST,MULTICAST,UP,LOWER_UP>
+ibp1s0           UP             9f:84:0c:cb:99:68:d9:48 <BROADCAST,MULTICAST,UP,LOWER_UP>",
+  "lsblk": "NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
+nvme0n1       259:0  0 894.1G  0 disk
+├─nvme0n1p1   259:1  0     1G  0 part  /boot/efi
+└─nvme0n1p2   259:2  0   893G  0 part  /
+nvme1n1       259:3  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme2n1       259:4  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme3n1       259:5  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid
+nvme4n1       259:6  0   3.5T  0 disk
+└─md0           9:0  0    14T  0 raid0 /raid",
+  "lspci": "00:00.0 Host bridge: Generic Root complex (simulated)
+01:00.0 Non-Volatile memory controller: Generic 960 GB NVMe boot SSD, M.2 2280
+02:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+03:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+04:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+05:00.0 Non-Volatile memory controller: Generic 3.84 TB NVMe SSD, U.2
+0f:00.0 VGA compatible controller: Generic BMC video controller (reference)
+10:00.0 PCI bridge: Generic PCIe Gen5 riser with PCIe switch (reference)
+18:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+28:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+38:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+48:00.0 3D controller: NVIDIA Corporation SXM-style GPU module, 80 GB HBM (reference)
+a0:00.0 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+a0:00.1 Ethernet controller: Generic OCP 3.0 NIC, 2 × 100GbE QSFP28 (reference)
+b0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)
+c0:00.0 Infiniband controller: NVIDIA Corporation ConnectX-7-class 400G adapter, 1 × OSFP (reference)",
+  "nvidia-smi --query-gpu=index,pci.bus_id,ecc.errors.uncorrected.volatile.total,clocks.sm --format=csv": "index, pci.bus_id, ecc.errors.uncorrected.volatile.total, clocks.current.sm [MHz]
+0, 00000000:18:00.0, 0, 1980 MHz
+1, 00000000:28:00.0, 0, 1980 MHz
+2, 00000000:38:00.0, 0, 1980 MHz
+3, 00000000:48:00.0, 0, 1980 MHz",
+  "nvidia-smi -L": "GPU 0: Reference SXM 80GB (UUID: GPU-438ecfc8-468e-d481-488e-d7a7478ed614)
+GPU 1: Reference SXM 80GB (UUID: GPU-8c804d43-8d80-4ed6-8f80-51fc9080538f)
+GPU 2: Reference SXM 80GB (UUID: GPU-95fa784b-96fa-79de-98fa-7d0499fa7e97)
+GPU 3: Reference SXM 80GB (UUID: GPU-13dda245-10dd-9d8c-0edd-9a660fdd9bf9)",
+  "sudo dmesg -l err,warn": "[    4.620000] nvidia: loading out-of-tree module taints kernel.
+[4914137.000000] pcieport 0000:00:01.0: AER: GPU 4 not enumerated: upstream device missing or failed
+[4914137.000000] pcieport 0000:00:01.0: AER: GPU 5 not enumerated: upstream device missing or failed
+[4914137.000000] pcieport 0000:00:01.0: AER: GPU 6 not enumerated: upstream device missing or failed
+[4914137.000000] pcieport 0000:00:01.0: AER: GPU 7 not enumerated: upstream device missing or failed
+[4914137.000000] pcieport 0000:00:01.0: AER: PCIe switch riser 1: PCIe link failure, downstream devices lost
+[4914137.000000] pcieport 0000:00:01.0: AER: Fabric NIC 2: not enumerated (riser missing or failed)
+[4914137.000000] pcieport 0000:00:01.0: AER: Fabric NIC 3: not enumerated (riser missing or failed)",
+}
+`;

@@ -46,16 +46,30 @@ Legend: ✅ done · 🟡 partial (engine ready, UI pending) · ⬜ planned
 - ✅ Work orders DCT-0007 (BMC isolated by a wrong VLAN) and DCT-0008 (laptop onboarding)
 - ✅ Playwright: management cable unplugged → SSH fails → replug → SSH works (with drag-and-drop)
 
-## Phase 3 — Virtual terminal ⬜
+## Phase 3 — Virtual terminal ✅
 
-- ⬜ xterm.js + fit addon; prompt, history, tab completion, `clear`, Ctrl-C
-- ⬜ CommandParser (tokens, quotes, pipes to `grep`/`head`/`wc`, redirection rejected),
-  CommandRegistry, CommandExecutor (pure: `(state, session, argv) → {stdout, stderr, exit, effects}`)
-- ⬜ Simulated filesystem per host (`/var/log`, `/proc`, `/sys/class/net`, `/etc`)
-- ⬜ Linux commands from the brief; output derived from the `os` channel
-- ⬜ SSH sessions gated by reachability, credentials and `sshd` state
-- ⬜ NVIDIA: `nvidia-smi` (+ `-q`, `-L`, `-i N -q`) from the `driver` channel; driver-missing errors
-- ⬜ Snapshot tests per command × fault matrix
+- ✅ xterm.js + fit addon (lazy chunk); coloured prompts, history (↑/↓), tab completion of
+  commands, paths and host names, `clear` / Ctrl+L, Ctrl+C, Ctrl+A/E/U/K/W, multi-line paste
+- ✅ CommandParser (quotes, escapes, `~`, `$VAR`, pipes, `;` `&&` `||`; redirection and
+  substitution rejected), CommandRegistry, CommandExecutor; commands read the snapshot and act
+  only through engine actions
+- ✅ Session stack: tech-laptop → `ssh` (BMC, host, switch banner) → `sol activate` / serial
+  `console`; `sudo` / `sudo -i`; hops drop when the simulation breaks them (reboot, cable, BMC)
+- ✅ Simulated read-only filesystem per shell (`/etc`, `/proc`, `/sys/class/net`, `/var/log`, `/dev`)
+- ✅ Linux: ls, cd, pwd, cat, find, grep, head, tail, wc, sort, uniq, ps, top, free, df, lsblk,
+  lscpu, lspci (-v/-vv/-k), lsusb, dmesg (needs sudo), journalctl, systemctl, uname, hostname,
+  uptime, reboot, shutdown, modprobe, lsmod, ip (addr/link/route/neigh, `link set`), ping,
+  traceroute, ethtool (-i/-m), ssh
+- ✅ BMC CLI and `ipmitool` (local, `-I lanplus`, in-band): power, chassis, sel, sdr, fru, mc, lan, sol
+- ✅ NVIDIA: `nvidia-smi` table, `-L`, `-q`, `-i N -q`, `-d`, `--query-gpu --format=csv`,
+  `nvlink -s`; driver-missing error, "Unable to determine the device handle" for GPUs off the bus,
+  ERR! for fatal Xids, renumbering when GPUs do not enumerate
+- ✅ Engine actions `host/setGpuDriver` (modprobe) and `host/setLinkAdmin` (ip link), reset at boot
+- ✅ Terminal page (quick start, command reference) and Terminal app on the laptop, sharing one session
+- ✅ Command × fault snapshot matrix; Playwright: GPU off the bus → nvidia-smi / lspci / dmesg →
+  replace → recovered; terminal mechanics
+- ⬜ `dcgmi`, InfiniBand and NCCL tools answer that they arrive in Phase 4 / 5 (only on hosts
+  that have the software or HCAs)
 
 ## Phase 4 — GPU diagnostics 🟡
 

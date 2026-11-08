@@ -2,7 +2,7 @@
  * The technician laptop's screen: a desktop with network, diagnostic and
  * work-order tools. Opened from the top bar on any page.
  */
-import { ArrowLeft, BatteryCharging, BatteryLow, BatteryMedium, ClipboardList, Globe, HardDrive, Microchip, Network, Radio, SquareTerminal, Terminal, X } from 'lucide-react';
+import { ArrowLeft, BatteryCharging, BatteryLow, BatteryMedium, ClipboardList, Globe, HardDrive, KeyRound, Microchip, Network, Radio, SquareTerminal, Terminal, X } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { useNavigate } from 'react-router';
 import { StatusDot } from '@/components/ui/badge';
@@ -13,12 +13,14 @@ import { useSim } from '@/stores/simulationStore';
 import { type LaptopApp, useUiStore } from '@/stores/uiStore';
 import { cn } from '@/utils/cn';
 import { formatClock } from '@/utils/format';
+import { LaptopTerminalApp } from '@/components/terminal/TerminalPanel';
 import { BrowserApp, ConsoleApp, NetworkApp, PingApp, SshApp } from './LaptopApps';
 
 const APPS: { id: Exclude<LaptopApp, 'home'>; label: string; icon: ComponentType<{ className?: string }>; component: ComponentType }[] = [
+  { id: 'terminal', label: 'Terminal', icon: SquareTerminal, component: LaptopTerminalApp },
   { id: 'network', label: 'Network settings', icon: Network, component: NetworkApp },
   { id: 'ping', label: 'Ping', icon: Radio, component: PingApp },
-  { id: 'ssh', label: 'SSH client', icon: SquareTerminal, component: SshApp },
+  { id: 'ssh', label: 'SSH client', icon: KeyRound, component: SshApp },
   { id: 'browser', label: 'Browser', icon: Globe, component: BrowserApp },
   { id: 'console', label: 'Serial console', icon: Terminal, component: ConsoleApp },
 ];

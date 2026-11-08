@@ -488,7 +488,11 @@ export type SimAction =
   | { type: 'facility/setCrahSupply'; tempC: number }
   | { type: 'port/setVlan'; portId: Id; vlan: VlanConfig }
   | { type: 'workstation/configure'; net: Partial<WorkstationNetConfig> }
-  | { type: 'workstation/move'; rackId: Id; side: 'front' | 'rear' };
+  | { type: 'workstation/move'; rackId: Id; side: 'front' | 'rear' }
+  /** Host OS: load / unload the NVIDIA kernel driver (modprobe). Reset on the next boot. */
+  | { type: 'host/setGpuDriver'; equipmentId: Id; loaded: boolean }
+  /** Host OS: bring a network interface up or down (ip link set). Reset on the next boot. */
+  | { type: 'host/setLinkAdmin'; portId: Id; up: boolean };
 
 export type ActionResult =
   | { ok: true; warnings: string[] }

@@ -16,7 +16,7 @@ import { describeVlan, isSwitchingPort } from '@/simulation/networking/Vlan';
 import { configureWorkstation, moveCart } from '@/simulation/workstation/Workstation';
 import { estimateIdleDemand } from '@/simulation/power/PowerState';
 import type { Equipment, Id, SimAction, SimulationState } from '@/types/simulation';
-import { isHost, isMainPowerOn } from './SimulationState';
+import { isHost, isMainPowerOn, OS_STATES } from './SimulationState';
 import { clamp, fail } from './util';
 
 export interface HandlerResult {
@@ -28,6 +28,21 @@ function hostOrFail(s: SimulationState, id: Id): Equipment {
   const eq = s.equipment[id];
   if (!eq) fail('UNKNOWN_EQUIPMENT', `Unknown equipment ${id}`);
   if (!isHost(eq)) fail('NOT_A_HOST', `${eq.hostname} has no power control`);
+  return eq;
+}
+
+/** Runtime OS state that a reboot resets: the GPU driver loads again and interfaces come back up. */
+function resetOsRuntime(s: SimulationState, eq: Equipment): void {
+  eq.software.gpuDriverLoaded = getEquipmentModel(eq.modelId).slots.some((sl) => sl.category === 'gpu');
+  for (const pid of eq.portIds) {
+    const p = s.ports[pid];
+    if (p && p.componentId && (p.role === 'data' || p.role === 'fabric') && !p.adminUp) p.adminUp = true;
+  }
+}
+
+function osHostOrFail(s: SimulationState, id: Id): Equipment {
+  const eq = hostOrFail(s, id);
+  if (!OS_STATES.has(eq.state)) fail('OS_NOT_RUNNING', `${eq.hostname}: operating system is not running`);
   return eq;
 }
 
@@ -49,6 +64,7 @@ export function handleAction(s: SimulationState, action: SimAction): HandlerResu
         if (eq.desiredPower !== 'on') {
           eq.desiredPower = 'on';
           eq.bootElapsedMs = 0;
+          resetOsRuntime(s, eq);
         }
         eq.thermalTrip = false;
         events.push(procedure(`${eq.hostname}: power on requested`, eq.id));
@@ -64,6 +80,7 @@ export function handleAction(s: SimulationState, action: SimAction): HandlerResu
       eq.desiredPower = 'on';
       eq.bootElapsedMs = 0;
       eq.thermalTrip = false;
+      resetOsRuntime(s, eq);
       events.push(procedure(`${eq.hostname}: power cycle (warm reset)`, eq.id));
       break;
     }
@@ -196,6 +213,26 @@ export function handleAction(s: SimulationState, action: SimAction): HandlerResu
     case 'workstation/move': {
       moveCart(s, action.rackId, action.side);
       events.push(procedure(`Crash cart moved to ${action.rackId} (${action.side === 'front' ? 'cold aisle' : 'hot aisle'})`));
+      break;
+    }
+    case 'host/setGpuDriver': {
+      const eq = osHostOrFail(s, action.equipmentId);
+      if (!getEquipmentModel(eq.modelId).slots.some((sl) => sl.category === 'gpu')) fail('NO_GPU', `${eq.hostname} has no NVIDIA GPUs`);
+      if (eq.software.gpuDriverLoaded === action.loaded) break;
+      eq.software.gpuDriverLoaded = action.loaded;
+      events.push({ severity: action.loaded ? 'info' : 'warning', category: 'gpu', message: `${eq.hostname}: NVIDIA kernel driver ${action.loaded ? 'loaded' : 'unloaded'} (modprobe)`, equipmentId: eq.id, channels: ['os'] });
+      break;
+    }
+    case 'host/setLinkAdmin': {
+      const port = s.ports[action.portId];
+      if (!port) fail('UNKNOWN_PORT', `Unknown port ${action.portId}`);
+      const eq = osHostOrFail(s, port.equipmentId);
+      if (!port.componentId || (port.role !== 'data' && port.role !== 'fabric')) fail('NOT_AN_OS_INTERFACE', `${port.label} is not an operating-system network interface`);
+      const comp = s.components[port.componentId];
+      if (!comp || comp.status === 'failed' || comp.status === 'not_detected') fail('NO_SUCH_DEVICE', `${port.osName ?? port.label}: device not present`);
+      if (port.adminUp === action.up) break;
+      port.adminUp = action.up;
+      events.push({ severity: 'info', category: 'network', message: `${eq.hostname}: ${port.osName ?? port.label} set ${action.up ? 'up' : 'down'} (ip link)`, equipmentId: eq.id, channels: ['os'] });
       break;
     }
     case 'facility/setCrahSupply': {

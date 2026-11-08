@@ -33,7 +33,7 @@ export const NAV: NavItem[] = [
   { to: '/network', label: 'Network Lab', icon: Network, group: 'Operate' },
   { to: '/gpu', label: 'GPU Diagnostics', icon: Microchip, group: 'Operate' },
   { to: '/facility', label: 'Cooling & Power', icon: Gauge, group: 'Operate' },
-  { to: '/terminal', label: 'Terminal', icon: Terminal, group: 'Operate', phase: 3 },
+  { to: '/terminal', label: 'Terminal', icon: Terminal, group: 'Operate' },
   { to: '/workorders', label: 'Work Orders', icon: ClipboardList, group: 'Train' },
   { to: '/learn', label: 'Learning Center', icon: GraduationCap, group: 'Train' },
   { to: '/inventory', label: 'Inventory', icon: Package, group: 'Train' },

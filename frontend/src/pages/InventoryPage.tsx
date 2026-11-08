@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Page } from '@/components/layout/AppShell';
+import { usePageMemory } from '@/hooks/usePageMemory';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AccuracyBadge, Mono } from '@/components/ui/misc';
@@ -9,6 +10,7 @@ import { Tabs } from '@/components/ui/tabs';
 import { getCableModel } from '@/data/cables/cableCatalog';
 import { getComponentModel } from '@/data/hardware/componentCatalog';
 import { getEquipmentModel } from '@/data/hardware/equipmentCatalog';
+import { componentPartNumber, equipmentPartNumber } from '@/simulation/inventory/DeviceInfo';
 import { useDevMode } from '@/stores/hardwareStore';
 import { useSim } from '@/stores/simulationStore';
 
@@ -18,7 +20,9 @@ export function InventoryPage() {
   const s = useSim((st) => st);
   const devMode = useDevMode();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<TabId>('components');
+  const [tabMem, setTabMem] = usePageMemory('inventoryTab');
+  const tab = (['components', 'equipment', 'cables'].includes(tabMem) ? tabMem : 'components') as TabId;
+  const setTab = (t: TabId) => setTabMem(t);
   const comps = useMemo(() => Object.values(s.components).filter((c) => c.location.kind === 'inventory'), [s.components]);
   const eqs = useMemo(() => Object.values(s.equipment).filter((e) => e.location.kind === 'inventory'), [s.equipment]);
   const cables = useMemo(() => {
@@ -58,6 +62,7 @@ export function InventoryPage() {
                   <th className="px-3 py-1.5 font-medium">Part</th>
                   <th className="px-2 py-1.5 font-medium">Category</th>
                   <th className="px-2 py-1.5 font-medium">Form factor</th>
+                  <th className="px-2 py-1.5 font-medium">Part number</th>
                   <th className="px-2 py-1.5 font-medium">Serial</th>
                   <th className="px-2 py-1.5 font-medium">Origin</th>
                   <th className="px-2 py-1.5 font-medium">Accuracy</th>
@@ -73,6 +78,9 @@ export function InventoryPage() {
                         <td className="px-3 py-1">{m.name}</td>
                         <td className="px-2 py-1 text-muted">{m.category}</td>
                         <td className="px-2 py-1 text-muted">{m.formFactor}</td>
+                        <td className="px-2 py-1">
+                          <Mono>{componentPartNumber(c.modelId)}</Mono>
+                        </td>
                         <td className="px-2 py-1">
                           <Mono>{c.serial}</Mono>
                         </td>
@@ -107,6 +115,9 @@ export function InventoryPage() {
                   <li key={e.id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-[12px]">
                     <Mono className="text-fg">{e.hostname}</Mono>
                     <span className="text-muted">{m.name}</span>
+                    <Mono className="text-subtle">
+                      PN {equipmentPartNumber(e.modelId)} · SN {e.serial}
+                    </Mono>
                     <Badge>{m.heightU}U</Badge>
                     <Badge>{m.rackTypes.join(' / ') || 'floor'}</Badge>
                     <span className="ml-auto flex gap-2">

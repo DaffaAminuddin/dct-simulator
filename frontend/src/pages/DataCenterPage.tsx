@@ -2,6 +2,8 @@ import { Box, Crosshair, Map as MapIcon, Rows3 } from 'lucide-react';
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { FloorPlan2D } from '@/components/datacenter/FloorPlan2D';
+import { DeviceInfoCard } from '@/components/device/DeviceInfoCard';
+import { usePageMemory } from '@/hooks/usePageMemory';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Badge, StatusDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +31,63 @@ const PRESETS: { id: CameraPreset; label: string }[] = [
   { id: 'top', label: 'Top' },
 ];
 
+/** Units in a rack (top of rack first) with the selected unit's device information. */
+function RackUnits({ rackId }: { rackId: string }) {
+  const navigate = useNavigate();
+  const equipment = useSim((st) => st.equipment);
+  const ports = useSim((st) => st.ports);
+  const [unitId, setUnitId] = usePageMemory('dataHallUnitId');
+  const units = useMemo(
+    () =>
+      Object.values(equipment)
+        .filter((e) => e.location.kind === 'rack' && e.location.rackId === rackId && e.kind !== 'blank')
+        .sort((a, b) => (b.location.kind === 'rack' ? (b.location.uStart ?? -1) : 0) - (a.location.kind === 'rack' ? (a.location.uStart ?? -1) : 0)),
+    [equipment, rackId],
+  );
+  const selected = units.find((u) => u.id === unitId);
+  const uLabel = (e: (typeof units)[number]) => (e.location.kind === 'rack' ? (e.location.uStart === null ? '0U' : `U${e.location.uStart}`) : '');
+  const bmcIp = (e: (typeof units)[number]) => e.portIds.map((id) => ports[id]).find((p) => p?.role === 'bmc')?.ip?.address;
+  return (
+    <Panel title={`Units in ${rackId}`} subtitle="Select a unit for SN, PN and addresses" bodyClassName="p-1.5">
+      {units.length === 0 ? (
+        <div className="p-2 text-[12px] text-subtle">No equipment installed.</div>
+      ) : (
+        <ul className="max-h-[260px] space-y-0.5 overflow-y-auto" aria-label={`Units in ${rackId}`}>
+          {units.map((u) => (
+            <li key={u.id}>
+              <button
+                type="button"
+                onClick={() => setUnitId(u.id === unitId ? null : u.id)}
+                aria-current={u.id === unitId}
+                className={cn('flex w-full items-center gap-2 rounded-chip px-2 py-1 text-left hover:bg-surface-3', u.id === unitId && 'bg-surface-3 shadow-[inset_2px_0_0_var(--color-accent)]')}
+              >
+                <span className="w-9 shrink-0 font-mono text-[11px] text-subtle">{uLabel(u)}</span>
+                <span className="min-w-0 flex-1 truncate font-mono text-[12px]">{u.hostname}</span>
+                <span className="font-mono text-[11px] text-muted">{bmcIp(u) ?? ''}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {selected && (
+        <div className="mt-2 space-y-3 border-t border-border px-2 pt-3 pb-1">
+          <DeviceInfoCard equipmentId={selected.id} compact />
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              useUiStore.getState().selectEquipment(selected.id, rackId);
+              navigate(`/racks/${rackId}`);
+            }}
+          >
+            <Rows3 /> Show {selected.hostname} in Rack Explorer
+          </Button>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
 export function DataCenterPage() {
   const navigate = useNavigate();
   const s = useSim((st) => st);
@@ -36,9 +95,12 @@ export function DataCenterPage() {
   const webgl = useWebGLAvailable();
   const view = useUiStore((st) => st.dataHallView);
   const setView = useUiStore((st) => st.setDataHallView);
-  const selectedRackId = useUiStore((st) => st.selectedRackId);
-  const selectRack = useUiStore((st) => st.selectRack);
-  const [preset, setPreset] = useState<CameraPreset>('overview');
+  // The data hall remembers its own rack; Rack Explorer only follows when a rack is opened there.
+  const explorerRackId = useUiStore((st) => st.selectedRackId);
+  const [hallRackId, setHallRackId] = usePageMemory('dataHallRackId');
+  const selectedRackId = hallRackId ?? explorerRackId;
+  const [presetMem, setPreset] = usePageMemory('dataHallPreset');
+  const preset = (PRESETS.some((x) => x.id === presetMem) ? presetMem : 'overview') as CameraPreset;
   const [focusSeq, setFocusSeq] = useState(0);
   const effectiveView = webgl ? view : '2d';
 
@@ -53,9 +115,12 @@ export function DataCenterPage() {
   );
   const sel = rackRows.find((r) => r.rack.id === selectedRackId) ?? rackRows[0];
   const alerts = monitoringAlerts(s, devMode).filter((a) => a.rackId === sel.rack.id);
-  const open = (id: string) => navigate(`/racks/${id}`);
+  const open = (id: string) => {
+    useUiStore.getState().selectRack(id);
+    navigate(`/racks/${id}`);
+  };
   const select = (id: string) => {
-    selectRack(id);
+    setHallRackId(id);
     setFocusSeq((n) => n + 1);
   };
 
@@ -181,6 +246,8 @@ export function DataCenterPage() {
             </Button>
           </div>
         </Panel>
+
+        <RackUnits rackId={sel.rack.id} />
       </aside>
     </div>
   );

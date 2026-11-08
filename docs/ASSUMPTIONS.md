@@ -73,6 +73,31 @@ vendor diagnostic thresholds or vendor-specific command output.
 - Serial console output is a simplified, generic boot log. It does not reproduce a vendor
   BIOS or BMC console.
 
+### Terminal (Phase 3)
+- The terminal is a deterministic simulation. Command output is computed from the simulation
+  state; nothing runs on the learner's computer. Output formats follow common Linux, ipmitool
+  and nvidia-smi conventions but are not byte-for-byte copies of any version.
+- Credentials come from the simulated vault: `admin` (BMC), `dct` (hosts, passwordless sudo),
+  `netops` (switches). SOL and serial-console logins are automatic.
+- The OOB network is firewalled from the data network. Hosts are reached through the BMC (SOL),
+  the console cable, or SSH from another host or a laptop patched into the data network. Hosts
+  resolve names through `/etc/hosts`; the laptop uses the DNS server from DHCP.
+- `nvidia-smi` reports driver version `sim-3.0` and CUDA `n/a`. PCI vendor/device IDs, firmware
+  versions and serial-number formats are not real values. GPU UUIDs are derived from serials.
+- `ping` sends 4 packets unless `-c` is given. `top` prints one batch iteration. `dmesg -w`,
+  `journalctl -f`, file redirection and job control are not supported. `$?` is expanded when
+  the line is parsed.
+- `systemctl` service state follows the hardware and driver; start/stop do not change it.
+  Unloading the NVIDIA driver with `modprobe -r` and `ip link set ... down` last until the next
+  boot.
+- Uptime for hosts that were already running at scenario start is a deterministic seed.
+- Grace CPU memory uses the published "up to 480 GB" LPDDR5X figure.
+
+### Device identifiers
+- Part numbers (`SRV-4821-B02` style) are simulated per catalog model and are not vendor part
+  numbers. Serial numbers and asset tags are deterministic simulated values. MAC addresses are
+  locally administered (`02:` prefix) and derived from the unit serial.
+
 ### NVLink mapping
 Each GPU connects once to each of the 18 NVLink Switch chips; with 2 chips per tray, every
 switch tray contributes 2 of a GPU's 18 links. An unhealthy tray removes 2 links from every GPU
@@ -82,9 +107,11 @@ in the rack.
 Which faults are visible to the BMC, the LEDs, the OS, the driver or DCGM follows general
 industry behaviour, simplified per fault type (see `SIMULATION_SPEC.md` §1.2 and §8).
 
-## Limitations (after Phase 2)
+## Limitations (after Phase 3)
 
-- No terminal yet (Phase 3). The GPU Diagnostics screen shows the driver-channel view.
+- DCGM (`dcgmi`), InfiniBand tools and NCCL tests are not simulated yet (Phases 4 and 5);
+  the commands say so on hosts that have them installed.
+- Switch CLIs are not interactive yet (Phase 5): SSH to a switch shows its banner and closes.
 - Work-order scoring, guided step highlighting and quizzes are not built (Phase 6).
 - The simulation runs on the main thread at 2 Hz. A tick costs about 12 ms on a desktop CPU.
 - Not suitable for facility design, capacity planning or safety certification.

@@ -11,6 +11,15 @@ export function hash32(input: string): number {
   return h >>> 0;
 }
 
+/** Deterministic locally administered MAC address derived from a seed (serial / port id). */
+export function macFor(seed: string): string {
+  const h = hash32(seed);
+  const h2 = hash32(`${seed}#mac`);
+  return ['02', (h & 255).toString(16), ((h >>> 8) & 255).toString(16), ((h >>> 16) & 255).toString(16), (h2 & 255).toString(16), ((h2 >>> 8) & 255).toString(16)]
+    .map((x) => x.padStart(2, '0'))
+    .join(':');
+}
+
 const SERIAL_ALPHABET = '0123456789ABCDEFGHJKLMNPRSTUVWXY';
 
 /** Deterministic simulated serial number, e.g. `RS1-2F8K3J7Q`. */

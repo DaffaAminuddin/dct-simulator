@@ -19,6 +19,7 @@ import { TerminalPage } from '@/pages/TerminalPage';
 import { WorkOrdersPage } from '@/pages/WorkOrdersPage';
 import { saveState } from '@/simulation/core/persistence';
 import { engine, useSimulationStore } from '@/stores/simulationStore';
+import { useTerminalStore } from '@/stores/terminalStore';
 import { useUiStore } from '@/stores/uiStore';
 
 function NotFound() {
@@ -79,7 +80,7 @@ export default function App() {
   useEffect(() => {
     // Start the real-time clock; in development expose the engine for debugging and E2E checks.
     useSimulationStore.getState().setRunning(true);
-    if (import.meta.env.DEV) (window as unknown as { __dct?: unknown }).__dct = { engine, store: useSimulationStore };
+    if (import.meta.env.DEV) (window as unknown as { __dct?: unknown }).__dct = { engine, store: useSimulationStore, terminal: useTerminalStore };
     // Warm the lazily loaded 3D chunk so the data hall opens instantly.
     const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
     idle(() => void import('@/scenes/DataHallScene/DataHallScene'));

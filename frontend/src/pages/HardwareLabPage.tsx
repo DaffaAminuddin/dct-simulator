@@ -1,7 +1,8 @@
 import { DoorClosed, DoorOpen, Power } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Page } from '@/components/layout/AppShell';
+import { usePageMemory } from '@/hooks/usePageMemory';
 import { ChassisView } from '@/components/server/ChassisView';
 import { ComponentDetails } from '@/components/server/ComponentDetails';
 import { Badge } from '@/components/ui/badge';
@@ -25,17 +26,22 @@ export function HardwareLabPage() {
   const lastSelected = useUiStore((st) => st.selectedEquipmentId);
   const selectedComponentId = useUiStore((st) => st.selectedComponentId);
   const selectComponent = useUiStore((st) => st.selectComponent);
-  const fallback = lastSelected && s.equipment[lastSelected]?.slots && getEquipmentModel(s.equipment[lastSelected].modelId).slots.length > 0 ? lastSelected : 'srv-r01-01';
-  const eqId = param && s.equipment[param] ? param : fallback;
+  const [lastLab, setLastLab] = usePageMemory('hardwareEquipmentId');
+  const [slotMem, setSlotMem] = usePageMemory('hardwareSlotId');
+  const inspectable = (id: string | null | undefined): id is string => !!id && !!s.equipment[id] && getEquipmentModel(s.equipment[id].modelId).slots.length > 0;
+  const eqId = param && s.equipment[param] ? param : inspectable(lastLab) ? lastLab : inspectable(lastSelected) ? lastSelected : 'srv-r01-01';
   const eq = s.equipment[eqId];
-  const [slotId, setSlotId] = useState<string | null>(null);
+  // The remembered slot belongs to one chassis: "<equipmentId>|<slotId>".
+  const slotId = slotMem?.startsWith(`${eqId}|`) ? slotMem.slice(eqId.length + 1) : null;
+  const setSlotId = (id: string | null) => setSlotMem(id ? `${eqId}|${id}` : null);
+  useEffect(() => setLastLab(eqId), [eqId, setLastLab]);
 
   // Sync slot selection from a component selected elsewhere (e.g. equipment details).
   useEffect(() => {
     if (!selectedComponentId) return;
     const c = s.components[selectedComponentId];
-    if (c?.location.kind === 'equipment' && c.location.equipmentId === eqId) setSlotId(c.location.slotId);
-  }, [selectedComponentId, eqId, s.components]);
+    if (c?.location.kind === 'equipment' && c.location.equipmentId === eqId) setSlotMem(`${eqId}|${c.location.slotId}`);
+  }, [selectedComponentId, eqId, s.components, setSlotMem]);
 
   const options = useMemo(() => {
     const groups = new Map<string, { id: string; label: string }[]>();

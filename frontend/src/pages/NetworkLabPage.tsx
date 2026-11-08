@@ -1,7 +1,8 @@
 import { Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Page } from '@/components/layout/AppShell';
+import { usePageMemory } from '@/hooks/usePageMemory';
 import { Badge } from '@/components/ui/badge';
 import { Mono, PhaseNotice } from '@/components/ui/misc';
 import { Panel } from '@/components/ui/panel';
@@ -18,9 +19,9 @@ const CABLE_TONE: Record<CableState, 'ok' | 'warn' | 'crit' | 'muted'> = { conne
 export function NetworkLabPage() {
   const s = useSim((st) => st);
   const navigate = useNavigate();
-  const [q, setQ] = useState('');
-  const [media, setMedia] = useState('all');
-  const [problemsOnly, setProblemsOnly] = useState(false);
+  const [q, setQ] = usePageMemory('networkQuery');
+  const [media, setMedia] = usePageMemory('networkMedia');
+  const [problemsOnly, setProblemsOnly] = usePageMemory('networkProblemsOnly');
   const rows = useMemo(() => patchSchedule(s), [s]);
   const switches = Object.values(s.equipment).filter((e) => e.kind === 'switch' && e.location.kind === 'rack');
 

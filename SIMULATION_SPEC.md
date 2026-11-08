@@ -68,8 +68,8 @@ Each component instance has: `id`, `modelId`, `category`, `serial`, `location`
 |---------|---------|----------------|
 | `led` | physical indicator visible on the hardware | component powered (even standby) |
 | `bmc` | BMC sensor / SEL / Redfish view | BMC alive (standby power, BMC healthy) |
-| `os` | kernel log, `lspci`, `ip link` (Phase 3) | host `os_running`/`degraded` |
-| `driver` | `nvidia-smi` (Phase 3/4) | OS up and GPU driver loaded |
+| `os` | kernel log (`dmesg`, `journalctl`), `lspci`, `ip link`, `lsblk` | host `os_running`/`degraded` |
+| `driver` | `nvidia-smi` | OS up and GPU driver loaded |
 | `dcgm` | DCGM health/diag (Phase 4) | OS up and DCGM installed |
 
 `health` (ground truth) is the worst condition severity mapped to `ok / warning / critical`.
