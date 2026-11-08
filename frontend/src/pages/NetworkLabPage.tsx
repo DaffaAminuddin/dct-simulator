@@ -29,7 +29,7 @@ export function NetworkLabPage() {
     const problem = r.state !== 'connected' || !r.aEquipment || !r.bEquipment || (r.media !== 'power' && r.aState !== 'link_up');
     if (problemsOnly && !problem) return false;
     if (!q) return true;
-    const hay = `${r.label} ${r.model} ${r.aEquipment} ${r.aPort} ${r.bEquipment} ${r.bPort}`.toLowerCase();
+    const hay = `${r.label} ${r.model} ${r.aEquipment} ${r.aPort} ${r.bEquipment} ${r.bPort} ${r.vlan ?? ''} ${r.ip ?? ''}`.toLowerCase();
     return hay.includes(q.toLowerCase());
   });
 
@@ -99,6 +99,8 @@ export function NetworkLabPage() {
                 <th className="px-2 py-1.5 font-medium">A end</th>
                 <th className="px-2 py-1.5 font-medium">B end</th>
                 <th className="px-2 py-1.5 font-medium">Link</th>
+                <th className="px-2 py-1.5 font-medium">Switchport</th>
+                <th className="px-2 py-1.5 font-medium">Endpoint IP</th>
                 <th className="px-2 py-1.5 font-medium">Cable state</th>
               </tr>
             </thead>
@@ -128,6 +130,8 @@ export function NetworkLabPage() {
                     )}
                   </td>
                   <td className="px-2 py-1">{r.media === 'power' ? <span className="text-subtle">power</span> : r.aState ? <Badge tone={portTone(r.aState)}>{PORT_STATE_TEXT[r.aState]}</Badge> : null}</td>
+                  <td className="px-2 py-1 font-mono text-[11px] text-muted">{r.vlan ?? ''}</td>
+                  <td className="px-2 py-1 font-mono text-[11px] text-muted">{r.ip ?? ''}</td>
                   <td className="px-2 py-1">
                     <Badge tone={CABLE_TONE[r.state]} title={r.reason}>
                       {r.state}
@@ -139,8 +143,37 @@ export function NetworkLabPage() {
           </table>
         </div>
       </Panel>
-      <PhaseNotice phase={5} title="IP, VLAN, routing and fabric diagnostics">
-        Layer 1 (cabling, optics, speed negotiation, admin state) is live now. You can unplug and re-plug cables from the Rack Explorer port inspector. The technician laptop (Phase 2), VLAN/IP/MTU/routing, packet loss and InfiniBand tools (Phase 5) build on this link model.
+      <Panel title="IP networks and policy">
+        <div className="grid gap-3 md:grid-cols-2">
+          {s.facility.networks.map((n) => (
+            <div key={n.id} className="rounded-[5px] border border-border bg-surface-2 p-2.5 text-[12px]">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="font-medium">{n.name}</span>
+                <Badge>VLAN {n.vlan}</Badge>
+              </div>
+              <div className="grid grid-cols-[110px_1fr] gap-y-0.5 text-muted">
+                <span>Subnet</span>
+                <Mono className="text-fg">{n.cidr}</Mono>
+                <span>Gateway (SVI)</span>
+                <Mono className="text-fg">
+                  {n.gateway} on {s.equipment[n.routerId]?.hostname}
+                </Mono>
+                <span>DHCP</span>
+                <span className="text-fg">{n.dhcp ? `${n.dhcp.start} – ${n.dhcp.end} (DNS ${n.dhcp.dns})` : 'none (static addressing)'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <ul className="mt-2 space-y-0.5 text-[12px] text-muted">
+          {s.facility.firewall.map((r, i) => (
+            <li key={i}>
+              <Badge tone={r.action === 'deny' ? 'crit' : 'ok'}>{r.action}</Badge> <Mono>{r.name}</Mono>: {r.from} → {r.to}
+            </li>
+          ))}
+        </ul>
+      </Panel>
+      <PhaseNotice phase={5} title="MTU, packet loss, latency and InfiniBand tools">
+        Physical links, VLANs (access/trunk), IP addressing, DHCP, DNS, routing and the OOB/data firewall are simulated now: use the technician laptop to test reachability. MTU black holes, packet loss, switch CLI and InfiniBand diagnostics build on this model in Phase 5.
       </PhaseNotice>
     </Page>
   );

@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router';
+import { LaptopDrawer } from '@/components/laptop/LaptopDrawer';
 import { Toaster } from '@/components/ui/misc';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
@@ -13,6 +14,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      <LaptopDrawer />
       <Toaster />
     </div>
   );

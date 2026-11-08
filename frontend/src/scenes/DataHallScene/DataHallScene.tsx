@@ -66,6 +66,34 @@ function CameraRig({ preset, focus }: { preset: CameraPreset; focus: [number, nu
   return null;
 }
 
+/** Technician crash cart parked in front of / behind a rack, with the laptop screen lit when it is on. */
+function CrashCart({ x, z, facing, poweredOn, linkUp }: { x: number; z: number; facing: number; poweredOn: boolean; linkUp: boolean }) {
+  return (
+    <group position={[x, 0, z]} rotation={[0, facing > 0 ? 0 : Math.PI, 0]}>
+      <mesh position={[0, 0.45, 0]}>
+        <boxGeometry args={[0.55, 0.04, 0.4]} />
+        <meshStandardMaterial color="#5b646b" metalness={0.5} roughness={0.5} />
+      </mesh>
+      {[-0.24, 0.24].map((dx) =>
+        [-0.17, 0.17].map((dz) => (
+          <mesh key={`${dx}${dz}`} position={[dx, 0.22, dz]}>
+            <cylinderGeometry args={[0.012, 0.012, 0.44, 6]} />
+            <meshStandardMaterial color="#3a4248" />
+          </mesh>
+        )),
+      )}
+      <mesh position={[0, 0.48, 0.02]}>
+        <boxGeometry args={[0.34, 0.015, 0.23]} />
+        <meshStandardMaterial color="#1c2023" />
+      </mesh>
+      <mesh position={[0, 0.6, -0.1]} rotation={[-0.25, 0, 0]}>
+        <boxGeometry args={[0.34, 0.22, 0.01]} />
+        <meshBasicMaterial color={poweredOn ? (linkUp ? '#1d4a2a' : '#1f3346') : '#0b0d0e'} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
 export interface DataHallSceneProps {
   selectedRackId: string;
   preset: CameraPreset;
@@ -96,6 +124,19 @@ export default function DataHallScene({ selectedRackId, preset, focusSeq, devMod
   const cduEq = s.equipment['cdu-01'];
   const cdu = cduEq && cduEq.location.kind === 'floor' ? { x: cduEq.location.x, z: cduEq.location.z, ok: cduEq.health === 'ok' } : undefined;
   const sel = s.racks[selectedRackId];
+  const laptop = s.equipment[s.workstation.equipmentId];
+  const cartRack = laptop?.location.kind === 'cart' ? s.racks[laptop.location.rackId] : undefined;
+  const cartSide = laptop?.location.kind === 'cart' ? laptop.location.side : 'rear';
+  const eth = laptop?.portIds.map((id) => s.ports[id]).find((p) => p?.defId === 'eth0');
+  const cart = cartRack
+    ? {
+        x: cartRack.position.x,
+        z: cartRack.position.z + cartRack.facing * (cartSide === 'front' ? 1 : -1) * 1.0,
+        facing: cartRack.facing * (cartSide === 'front' ? 1 : -1),
+        poweredOn: s.workstation.poweredOn,
+        linkUp: eth?.state === 'link_up',
+      }
+    : undefined;
   const focus = useMemo<[number, number, number] | null>(() => (focusSeq > 0 && sel ? [sel.position.x, 1.1, sel.position.z] : null), [focusSeq]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -129,6 +170,7 @@ export default function DataHallScene({ selectedRackId, preset, focusSeq, devMod
           onHover={setHovered}
         />
       ))}
+      {cart && <CrashCart {...cart} />}
       <OrbitControls makeDefault enableDamping={false} minDistance={1.2} maxDistance={16} maxPolarAngle={Math.PI / 2.05} target={PRESETS.overview.target} />
       <CameraRig preset={preset} focus={focus} />
     </Canvas>

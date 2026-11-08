@@ -176,6 +176,8 @@ export function DashboardPage() {
               { to: '/racks/R05', label: 'Inspect a GB200 NVL72 reference rack', ready: true },
               { to: '/hardware/srv-r03-g01', label: 'Open an 8-GPU server chassis', ready: true },
               { to: '/workorders/DCT-0002', label: 'Restore A+B power redundancy', ready: true },
+              { to: '/workorders/DCT-0008', label: 'Onboard the technician laptop (cabling, DHCP, SSH)', ready: true },
+              { to: '/workorders/DCT-0007', label: 'BMC unreachable with a green link LED', ready: true },
               { to: '/settings', label: 'Fault injection (developer mode)', ready: true, icon: true },
               { to: '/terminal', label: 'Linux & NVIDIA terminal', ready: false },
             ].map((l) => (

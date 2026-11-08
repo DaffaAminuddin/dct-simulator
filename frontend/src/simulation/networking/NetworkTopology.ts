@@ -3,6 +3,8 @@ import { getCableModel } from '@/data/cables/cableCatalog';
 import { getEquipmentModel } from '@/data/hardware/equipmentCatalog';
 import { hasStandbyPower, peerPort, portsOf } from '@/simulation/core/SimulationState';
 import type { CableState, Id, Port, PortState, SimulationState } from '@/types/simulation';
+import { routedFromNoc } from './Reachability';
+import { describeVlan, isSwitchingPort, snapshotCache } from './Vlan';
 
 export interface Reachability {
   reachable: boolean;
@@ -31,6 +33,8 @@ export function bmcReachability(s: SimulationState, equipmentId: Id): Reachabili
   }
   const peer = peerPort(s, port);
   const sw = peer ? s.equipment[peer.equipmentId] : undefined;
+  const routed = routedFromNoc(s, port, snapshotCache(s));
+  if (!routed.ok) return { reachable: false, reason: routed.reason ?? 'No path from the management network' };
   return { reachable: true, reason: 'OK', via: sw && peer ? `${sw.hostname} ${peer.label}` : undefined };
 }
 
@@ -47,6 +51,10 @@ export interface PatchRow {
   state: CableState;
   reason?: string;
   media: string;
+  /** VLAN config of the switch-side end, if any. */
+  vlan?: string;
+  /** IP of the endpoint end, if any. */
+  ip?: string;
 }
 
 function endInfo(s: SimulationState, portId: Id | null) {
@@ -64,8 +72,13 @@ export function patchSchedule(s: SimulationState): PatchRow[] {
     const a = endInfo(s, c.ends[0].portId);
     const b = endInfo(s, c.ends[1].portId);
     const m = getCableModel(c.modelId);
+    const ends = c.ends.map((e) => (e.portId ? s.ports[e.portId] : undefined));
+    const sw = ends.find((p) => p && isSwitchingPort(s, p));
+    const ep = ends.find((p) => p?.ip);
     rows.push({
       cableId: c.id,
+      vlan: sw ? describeVlan(sw.vlan) : undefined,
+      ip: ep?.ip ? `${ep.ip.address}/${ep.ip.prefix}` : undefined,
       label: c.label,
       model: m.shortName,
       media: m.media,

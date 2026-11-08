@@ -79,7 +79,7 @@ export type ConnectorType =
   | 'hdmi'
   | 'dc_laptop';
 
-export type PortRole = 'bmc' | 'mgmt' | 'data' | 'fabric' | 'uplink' | 'console' | 'usb' | 'power_in' | 'power_out' | 'video';
+export type PortRole = 'bmc' | 'mgmt' | 'data' | 'fabric' | 'uplink' | 'console' | 'usb' | 'power_in' | 'power_out' | 'video' | 'tech';
 
 export type PanelSide = 'front' | 'rear';
 
@@ -161,7 +161,8 @@ export type EquipmentKind =
   | 'switch'
   | 'pdu'
   | 'blank'
-  | 'cdu';
+  | 'cdu'
+  | 'laptop';
 
 export type RackType = 'standard' | 'mgx';
 

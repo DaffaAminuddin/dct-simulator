@@ -25,18 +25,26 @@ Legend: ✅ done · 🟡 partial (engine ready, UI pending) · ⬜ planned
 - ✅ Work orders DCT-0001…0006 can be started (fault injection) and validated against the engine
 - ✅ FastAPI backend scaffold: health + progress API + pytest
 
-## Phase 2 — Physical interaction 🟡
+## Phase 2 — Physical interaction ✅
 
 - ✅ Engine: mount/unmount with U constraints; component remove/install with compatibility;
   cable connect/disconnect with connector validation and length checks
-- ✅ Form-based mounting from inventory onto free U positions (Rack Explorer → rack summary)
-- ⬜ Drag-and-drop mounting (HTML5 DnD onto the elevation's free U rows)
-- ✅ "Cable in hand" workflow: take a compatible cable from inventory, unplug, re-plug, all
-  validated by the engine (Rack Explorer port inspector)
-- ⬜ Drag a cable end between ports; rear-view cable rendering (bundled lines between ports)
-- ⬜ Technician laptop equipment: RJ45, USB-A/C, HDMI, serial adapter, power ports
-- ⬜ Laptop network stack: interface state, DHCP/static IP, mask, gateway, DNS, VLAN tagging
-- ⬜ Playwright: disconnect management cable → SSH fails → reconnect → SSH works
+- ✅ Mounting from inventory: drag a chip onto a free U, or use the selectors (Rack Explorer)
+- ✅ Cable tray; drag a cable onto a port (green = fits, red = refused with the engine's reason);
+  "cable in hand" chip that can be dragged to the next port; unplug and re-plug from the port inspector
+- ✅ Cable rendering in the rack view (cables within the rack, risers for cables leaving it,
+  selected cable highlighted)
+- ✅ Technician laptop on a crash cart: RJ45 eth0, 2 × USB-A, USB-C PD power, HDMI; battery
+  and AC; the cart moves between racks (cables must be unplugged first)
+- ✅ Network layer: 802.1Q access/trunk switch ports, VLAN segments, IP plan (OOB 10.10/16,
+  data 10.100/16), gateway SVIs, DHCP pool, DNS, OOB↔data firewall
+- ✅ Laptop apps: network settings (DHCP/static, prefix, gateway, DNS, VLAN tag, interface
+  state), ping, SSH client (credential vault, auth checks), browser with BMC web UI
+  (Redfish-style power control), serial console with boot/POST/kernel output
+- ✅ BMC reachability now includes the VLAN/L3 path from the management router
+- ✅ Switch-port VLAN editing (port inspector); patch schedule shows switchport and IPs
+- ✅ Work orders DCT-0007 (BMC isolated by a wrong VLAN) and DCT-0008 (laptop onboarding)
+- ✅ Playwright: management cable unplugged → SSH fails → replug → SSH works (with drag-and-drop)
 
 ## Phase 3 — Virtual terminal ⬜
 

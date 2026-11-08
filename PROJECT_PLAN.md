@@ -41,7 +41,7 @@ Each phase is a working increment. See `IMPLEMENTATION_ROADMAP.md` for the detai
 | Phase | Theme | Status |
 |-------|-------|--------|
 | 1 | Interactive foundation: shell, dashboard, 3D data hall, rack explorer, hardware inspection, simulation engine | **Implemented** |
-| 2 | Physical interaction: mounting, component swaps, cable inventory, drag-and-drop cabling, laptop ports | Engine actions done; UI planned |
+| 2 | Physical interaction: mounting, component swaps, cable inventory, drag-and-drop cabling, technician laptop, network layer (VLAN/IP/DHCP/DNS/SSH) | **Implemented** |
 | 3 | Virtual terminal: xterm.js, parser, simulated filesystem, Linux/NVIDIA commands, SSH | Planned |
 | 4 | GPU diagnostics: DCGM simulation, XID/ECC, PCIe/NVLink diagnostics, fault scenarios | Partly in engine (faults and telemetry) |
 | 5 | Network, cooling and power: topology, switches, network faults, liquid cooling, power model | Partly in engine (power and thermal derivation) |

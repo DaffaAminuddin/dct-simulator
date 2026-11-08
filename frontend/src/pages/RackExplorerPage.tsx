@@ -4,7 +4,8 @@ import { useNavigate, useParams } from 'react-router';
 import { Page } from '@/components/layout/AppShell';
 import { PortDetails } from '@/components/networking/PortDetails';
 import { Led } from '@/components/rack/Led';
-import { RackElevation } from '@/components/rack/RackElevation';
+import { RackWorkbench } from '@/components/rack/RackWorkbench';
+import { CableTray } from '@/components/networking/CableTray';
 import { RackSummary } from '@/components/rack/RackSummary';
 import { EquipmentDetails } from '@/components/server/EquipmentDetails';
 import { StatusDot } from '@/components/ui/badge';
@@ -31,6 +32,8 @@ export function RackExplorerPage() {
   const selectPort = useUiStore((s) => s.selectPort);
   const devMode = useDevMode();
   const [freeU, setFreeU] = useState<number | null>(null);
+  const showCables = useUiStore((s) => s.showCables);
+  const setShowCables = useUiStore((s) => s.setShowCables);
   const selectedEq = useSim((s) => (selectedEquipmentId ? s.equipment[selectedEquipmentId] : undefined));
 
   useEffect(() => {
@@ -53,10 +56,11 @@ export function RackExplorerPage() {
     const s = getSim();
     const p = s.ports[portId];
     const eq = s.equipment[p.equipmentId];
-    const r = eq.location.kind === 'rack' ? eq.location.rackId : rackId;
+    const r = eq.location.kind === 'rack' || eq.location.kind === 'cart' ? eq.location.rackId : rackId;
     selectEquipment(eq.id, r);
     selectPort(portId);
-    setSide(p.side);
+    if (eq.location.kind === 'cart') setSide(eq.location.side);
+    else setSide(p.side);
     if (r !== rackId) navigate(`/racks/${r}`);
   };
 
@@ -111,9 +115,12 @@ export function RackExplorerPage() {
               <Led color="blue" /> UID
             </span>
             {devMode && <span className="text-warn">Developer colours: ports show exact link state</span>}
+            <label className="ml-auto flex items-center gap-1.5">
+              <input type="checkbox" checked={showCables} onChange={(e) => setShowCables(e.target.checked)} className="accent-[#7cc33f]" /> Show cables
+            </label>
           </div>
           <div className="max-h-[calc(100vh-190px)] overflow-y-auto pr-1">
-            <RackElevation
+            <RackWorkbench
               rackId={rackId}
               side={side}
               selectedEquipmentId={selectedEquipmentId}
@@ -140,8 +147,9 @@ export function RackExplorerPage() {
           {eqInThisRack && selectedEquipmentId ? (
             <EquipmentDetails equipmentId={selectedEquipmentId} onClose={() => selectEquipment(null)} onSelectPort={(pid) => jumpToPort(pid)} />
           ) : (
-            <RackSummary rackId={rackId} preselectU={freeU} />
+            !selectedPortId && <RackSummary rackId={rackId} preselectU={freeU} />
           )}
+          <CableTray />
         </div>
       </div>
     </Page>

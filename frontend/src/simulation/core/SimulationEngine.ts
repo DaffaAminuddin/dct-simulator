@@ -9,6 +9,7 @@
 import { integrateTemperatures, settleTemperatures } from '@/simulation/cooling/ThermalModel';
 import { appendEvents, diffForEvents, type EventDraft } from '@/simulation/diagnostics/HealthMonitor';
 import { advanceBoot, checkThermalTrips } from '@/simulation/hardware/Server';
+import { advanceWorkstation } from '@/simulation/workstation/Workstation';
 import type { ActionResult, SimAction, SimEvent, SimulationState } from '@/types/simulation';
 import { handleAction } from './actions';
 import { derive } from './derive';
@@ -106,6 +107,7 @@ export class SimulationEngine {
       s.timeMs += dt;
       integrateTemperatures(s, dt);
       advanceBoot(s, dt);
+      advanceWorkstation(s, dt);
       for (const eq of checkThermalTrips(s)) {
         tripEvents.push({
           severity: 'critical',

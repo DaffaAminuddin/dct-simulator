@@ -23,7 +23,7 @@ function read(): SimulationState | null {
     const raw = st.getItem(STATE_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as SimulationState;
-    if (s?.schemaVersion !== 1 || !s.equipment || !s.components || !s.ports) return null;
+    if (s?.schemaVersion !== 2 || !s.workstation || !s.equipment || !s.components || !s.ports) return null;
     return s;
   } catch {
     return null;

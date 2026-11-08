@@ -52,7 +52,9 @@ dct-simulator/
 │       │   ├── hardware/        Server (state machine, POST), GPU, CPU, Memory, Storage,
 │       │   │                    PSU, Fan, Compatibility, Rack (mount rules)
 │       │   ├── networking/      Cable (connector validation), NetworkPort (link derivation),
-│       │   │                    Switch, NetworkTopology (graph queries)
+│       │   │                    Switch, NetworkTopology, Vlan (L2 segments), Reachability
+│       │   │                    (L3 routing, firewall, DNS, ping/SSH/HTTPS probes), ip
+│       │   ├── workstation/     technician laptop: power/battery, DHCP/static IP, cart, console
 │       │   ├── power/           PowerDistribution (feeds → PDU → PSU / busbar), PowerState
 │       │   ├── cooling/         CoolingSystem (CDU, loops), ThermalModel
 │       │   ├── diagnostics/     FaultInjector, HealthMonitor, DiagnosticEngine (channels)
@@ -177,6 +179,17 @@ events are tagged `devOnly` so that root causes stay hidden outside developer mo
 | `components/**`, `pages/**` | render snapshots, dispatch actions | compute hardware behaviour |
 | `scenes/**` | 3D representation of the same snapshot | hold separate state |
 
+### Physical interaction (Phase 2)
+
+- `hooks/useCableActions.ts` holds the cable workflow shared by clicks and drag-and-drop (pick
+  up, plug the end that fits, unplug, stow). The drag payload is tracked in-module because
+  browsers hide `dataTransfer` during `dragover`.
+- `components/rack/RackWorkbench.tsx` wraps the elevation and the crash cart. It handles drops
+  by delegation on `[data-port]` / `[data-free-u]` and draws cables in an SVG overlay measured
+  from the port elements (a post-commit effect plus `ResizeObserver`).
+- `components/laptop/*` holds the laptop window (top-bar button) and its apps. Every probe is a
+  pure read of the latest snapshot.
+
 ### 3D performance
 
 - `frameloop="demand"`: the canvas re-renders only when the snapshot, the camera or a hover
@@ -202,4 +215,6 @@ server-side so that assessment results cannot be tampered with.
 | a cable or port type | `data/cables/cableCatalog.ts`, `simulation/networking/Cable.ts` mating table |
 | a fault type | `data/faults/faultCatalog.ts`, plus its effect in the owning rule module |
 | a terminal command (Phase 3) | `simulation/terminal/commands/*.ts`, registered in `CommandRegistry` |
+| a network / VLAN / firewall rule | `facility.networks` and `facility.firewall` in the seed; `networking/Reachability.ts` |
+| a laptop app | `components/laptop/LaptopApps.tsx` (pure probes from `Reachability.ts`) |
 | a scenario / work order | `data/workorders/*.ts` (faults to inject, resolution criteria) |

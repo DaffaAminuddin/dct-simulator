@@ -12,6 +12,8 @@ import { installComponent, removeComponent } from '@/simulation/hardware/Compati
 import { mountEquipment, unmountEquipment } from '@/simulation/hardware/Rack';
 import { checkFit, CONNECTOR_LABEL, requiredLengthM } from '@/simulation/networking/Cable';
 import { assertAdminControllable } from '@/simulation/networking/Switch';
+import { describeVlan, isSwitchingPort } from '@/simulation/networking/Vlan';
+import { configureWorkstation, moveCart } from '@/simulation/workstation/Workstation';
 import { estimateIdleDemand } from '@/simulation/power/PowerState';
 import type { Equipment, Id, SimAction, SimulationState } from '@/types/simulation';
 import { isHost, isMainPowerOn } from './SimulationState';
@@ -172,6 +174,28 @@ export function handleAction(s: SimulationState, action: SimAction): HandlerResu
     case 'fault/clear': {
       const f = clearFault(s, action.faultId);
       events.push({ severity: 'info', category: 'fault', devOnly: true, message: `Fault cleared: ${FAULT_DEFINITIONS[f.type].name} on ${describeTarget(s, f.targetId)}`, channels: [] });
+      break;
+    }
+    case 'port/setVlan': {
+      const port = s.ports[action.portId];
+      if (!port) fail('UNKNOWN_PORT', `Unknown port ${action.portId}`);
+      if (!isSwitchingPort(s, port)) fail('NOT_A_SWITCH_PORT', 'VLANs are configured on Ethernet switch ports');
+      const v = action.vlan;
+      const ok = (n: number) => Number.isInteger(n) && n >= 1 && n <= 4094;
+      if (!ok(v.access) || !ok(v.native) || !v.allowed.every(ok)) fail('INVALID_VLAN', 'VLAN IDs must be between 1 and 4094');
+      port.vlan = { mode: v.mode, access: v.access, native: v.native, allowed: [...new Set(v.allowed)].sort((a, b) => a - b) };
+      events.push(procedure(`${s.equipment[port.equipmentId].hostname} ${port.label}: switchport ${describeVlan(port.vlan)}`, port.equipmentId));
+      break;
+    }
+    case 'workstation/configure': {
+      warnings.push(...configureWorkstation(s, action.net));
+      const n = s.workstation.net;
+      events.push(procedure(`tech-laptop eth0 configured: ${n.mode === 'dhcp' ? 'DHCP' : `static ${n.address}/${n.prefix} gw ${n.gateway || 'none'}`}${n.vlan ? `, VLAN tag ${n.vlan}` : ''}${n.adminUp ? '' : ', interface down'}`));
+      break;
+    }
+    case 'workstation/move': {
+      moveCart(s, action.rackId, action.side);
+      events.push(procedure(`Crash cart moved to ${action.rackId} (${action.side === 'front' ? 'cold aisle' : 'hot aisle'})`));
       break;
     }
     case 'facility/setCrahSupply': {

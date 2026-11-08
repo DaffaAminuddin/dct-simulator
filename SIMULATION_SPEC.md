@@ -216,6 +216,44 @@ Phase 2 adds IP, VLAN, routing and firewall checks for the technician laptop.
 
 ---
 
+## 6a. Layer 2: VLANs (`networking/Vlan.ts`)
+
+- Ethernet switching ports (management, data and uplink roles; not InfiniBand, not a switch's
+  own OOB port) carry an 802.1Q config: `access <vlan>` or `trunk allowed [..] native <vlan>`.
+- A **segment** is a VLAN broadcast domain: flood from a switch across up-links whose two ends
+  both carry the VLAN, through running switches only.
+- An endpoint attaches to the VLAN its edge port maps its frames into. Untagged frames on an
+  access port go to the access VLAN, and tagged frames on an access port are **dropped**.
+  Untagged frames on a trunk go to the native VLAN, and tagged frames are accepted if allowed.
+- A cable from endpoint to endpoint (laptop ↔ BMC) forms a point-to-point segment.
+
+Seed plan: OOB management switches and the OOB aggregation use VLAN 10; ToR and spine use
+VLAN 100. Inter-switch links are trunks; endpoint ports are access ports.
+
+## 6b. Layer 3: addressing, routing, services (`networking/Reachability.ts`)
+
+| Network | VLAN | Subnet | Gateway (SVI) | Services |
+|---------|------|--------|---------------|----------|
+| `oob` | 10 | 10.10.0.0/16 | 10.10.0.1 on `agg-r04` | DHCP pool 10.10.250.100–199, DNS 10.10.0.53 |
+| `data` | 100 | 10.100.0.0/16 | 10.100.0.1 on `spine-r04-1` | none (static) |
+
+- Addresses: BMC / switch management `10.10.<rack>.<n>`, host data `10.100.<rack>.<n>`, with
+  the same `<n>` for one host. Staged spares have DCIM-reserved addresses.
+- Endpoint liveness: BMC needs the BMC alive; host data needs the OS up; switch management
+  and router services need the switch OS up.
+- Same subnet: the target must be in the sender's segment and alive, otherwise
+  *Destination Host Unreachable*. Different subnet: a gateway must be set, inside the sender's
+  subnet, and answering in its segment. Then the firewall is checked (`FW-OOB-ISOLATION`
+  denies oob ↔ data). Finally the target must sit in its network's segment as seen from that
+  network's router, otherwise the result is *Request timed out*.
+- DNS names: `<host>-bmc` → BMC, `<host>` → host data address, switch hostname → management
+  address. Resolution needs a reachable DNS server.
+- SSH needs a reachable target, an SSH service, and the matching credential profile
+  (`bmc-admin`, `linux-dct`, `netops`). HTTPS is offered by BMCs only.
+- **NOC view of a BMC** (`bmcReachability`): link up, plus membership in the OOB segment that
+  contains the OOB router. A wrong access VLAN therefore isolates a BMC while its link LED
+  stays lit.
+
 ## 7. Mounting and servicing rules (`hardware/Rack.ts`, `hardware/Compatibility.ts`)
 
 **Mount** (hard errors): equipment must be in inventory; `1 ≤ uStart`;
@@ -271,6 +309,23 @@ keeps its fault in inventory. The injector rejects targets of the wrong kind.
 | `bmc_failure` | bmc | BMC dead: no remote management, no SEL |
 
 ---
+
+## 10. Technician laptop (`workstation/Workstation.ts`, `workstation/Console.ts`)
+
+- Equipment `laptop-01` on a crash cart (`location: cart` at a rack, cold or hot aisle). The
+  cart can move only when no laptop cable is attached. Cable runs from the cart use U 20, plus
+  1.2 m to reach the other side of the rack.
+- Ports: `eth0` RJ45 1G (role `tech`), `usb0`/`usb1` USB-A, `usbc0` USB-C PD power inlet,
+  `hdmi0`.
+- Power: on AC when the C14 → USB-C adapter sits in a live PDU outlet. Otherwise the battery
+  drains (100 % in 120 min) and charges at 100 % per 60 min on AC. At 0 % the laptop is off and
+  eth0 loses link.
+- IP: DHCP (lease from the pool of the VLAN the port lands in, if that VLAN's router offers
+  DHCP), otherwise a link-local `169.254.x.x/16`; or static (validated). A static address that
+  duplicates a device raises a conflict.
+- Serial console: a console cable from a laptop USB-A port to an RJ45 console port shows the
+  host's console. That is POST, boot progress, POST failures, kernel messages for OS-visible
+  conditions (XIDs, EDAC, PCIe AER) and the login prompt. It needs no network or BMC.
 
 ## 9. Events and SEL (`diagnostics/HealthMonitor.ts`)
 

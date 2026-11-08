@@ -61,6 +61,18 @@ vendor diagnostic thresholds or vendor-specific command output.
 - Cable length check: Manhattan run between racks plus 3 m of vertical drops; within a rack,
   0.8 m plus 4.45 cm per U of separation.
 
+### Network layer (Phase 2)
+- One flat /16 per network, with one router (SVI) per network and no spanning tree. Loops are
+  not modelled, and links have no ARP or MAC-learning timing.
+- The OOB and data networks are isolated by an explicit firewall rule pair. There are no
+  per-port ACLs, NAT or IPv6.
+- Each network has one deterministic DHCP pool. The first free address is leased, with no
+  lease timers.
+- SSH and HTTPS are modelled as reachability, service and credential-profile checks. Lab
+  credentials are simulated vault entries, not passwords.
+- Serial console output is a simplified, generic boot log. It does not reproduce a vendor
+  BIOS or BMC console.
+
 ### NVLink mapping
 Each GPU connects once to each of the 18 NVLink Switch chips; with 2 chips per tray, every
 switch tray contributes 2 of a GPU's 18 links. An unhealthy tray removes 2 links from every GPU
@@ -70,10 +82,9 @@ in the rack.
 Which faults are visible to the BMC, the LEDs, the OS, the driver or DCGM follows general
 industry behaviour, simplified per fault type (see `SIMULATION_SPEC.md` §1.2 and §8).
 
-## Limitations (Phase 1)
+## Limitations (after Phase 2)
 
 - No terminal yet (Phase 3). The GPU Diagnostics screen shows the driver-channel view.
-- No technician laptop or IP-level reachability yet (Phase 2).
 - Work-order scoring, guided step highlighting and quizzes are not built (Phase 6).
 - The simulation runs on the main thread at 2 Hz. A tick costs about 12 ms on a desktop CPU.
 - Not suitable for facility design, capacity planning or safety certification.

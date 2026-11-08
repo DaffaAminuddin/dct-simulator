@@ -81,6 +81,7 @@ export function reconcile(prev: SimulationState | null, work: SimulationState): 
     startedAt: work.startedAt,
     seq: prev && deepEqual(prev.seq, work.seq) ? prev.seq : { ...work.seq },
     facility: prev && deepEqual(prev.facility, work.facility) ? prev.facility : deepClone(work.facility),
+    workstation: prev && deepEqual(prev.workstation, work.workstation) ? prev.workstation : deepClone(work.workstation),
     events: prev && prev.events.length === work.events.length && prev.events.at(-1)?.id === work.events.at(-1)?.id ? prev.events : work.events.map((e) => ({ ...e })),
   } as SimulationState;
   for (const key of COLLECTIONS) {
@@ -89,7 +90,7 @@ export function reconcile(prev: SimulationState | null, work: SimulationState): 
       work[key] as Record<string, unknown>,
     );
   }
-  if (prev && COLLECTIONS.every((k) => next[k] === prev[k]) && next.facility === prev.facility && next.events === prev.events && next.seq === prev.seq && next.timeMs === prev.timeMs) {
+  if (prev && COLLECTIONS.every((k) => next[k] === prev[k]) && next.facility === prev.facility && next.workstation === prev.workstation && next.events === prev.events && next.seq === prev.seq && next.timeMs === prev.timeMs) {
     return prev;
   }
   return next;

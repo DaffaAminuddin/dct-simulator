@@ -104,6 +104,7 @@ export function locationLabel(s: SimulationState, eq: Equipment): string {
   const loc = eq.location;
   if (loc.kind === 'inventory') return 'Inventory / spares cage';
   if (loc.kind === 'floor') return `${s.facility.id} / floor`;
+  if (loc.kind === 'cart') return `${s.facility.id} / ${loc.rackId} / crash cart (${loc.side === 'front' ? 'cold aisle' : 'hot aisle'})`;
   const model = getEquipmentModel(eq.modelId);
   if (loc.uStart === null) return `${s.facility.id} / ${loc.rackId} / 0U ${loc.side ?? ''}`.trim();
   const u = model.heightU > 1 ? `U${loc.uStart}–U${loc.uStart + model.heightU - 1}` : `U${loc.uStart}`;

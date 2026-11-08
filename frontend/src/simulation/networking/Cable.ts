@@ -160,18 +160,26 @@ export function evaluateLink(a: Port, b: Port, cable: CableModel): LinkResult {
 }
 
 /** Approximate cable run between two ports (metres), used for length validation. */
+/** Height (U) of the laptop on its crash cart, for cable-run estimates. */
+export const CART_U = 20;
+
 export function requiredLengthM(s: SimulationState, a: Port, b: Port): number {
-  const ea = s.equipment[a.equipmentId];
-  const eb = s.equipment[b.equipmentId];
-  const la = ea.location;
-  const lb = eb.location;
-  if (la.kind !== 'rack' || lb.kind !== 'rack') return 0;
-  const uOf = (u: number | null) => (u === null ? null : u);
+  const pos = (p: Port) => {
+    const loc = s.equipment[p.equipmentId].location;
+    if (loc.kind === 'rack') return { rackId: loc.rackId, u: loc.uStart, cart: false, side: p.side };
+    if (loc.kind === 'cart') return { rackId: loc.rackId, u: CART_U as number | null, cart: true, side: loc.side };
+    return null;
+  };
+  const pa = pos(a);
+  const pb = pos(b);
+  if (!pa || !pb) return 0;
+  const la = { rackId: pa.rackId };
+  const lb = { rackId: pb.rackId };
   if (la.rackId === lb.rackId) {
-    const ua = uOf(la.uStart);
-    const ub = uOf(lb.uStart);
-    const du = ua === null || ub === null ? 0 : Math.abs(ua - ub);
-    return 0.8 + du * 0.0445;
+    const du = pa.u === null || pb.u === null ? 0 : Math.abs(pa.u - pb.u);
+    // From the cart, reaching the other side of the rack means going around it.
+    const around = (pa.cart || pb.cart) && pa.side !== pb.side ? 1.2 : 0;
+    return 0.8 + du * 0.0445 + around;
   }
   const ra = s.racks[la.rackId];
   const rb = s.racks[lb.rackId];

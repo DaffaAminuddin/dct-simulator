@@ -7,7 +7,7 @@ cooling, network, hardware and diagnostic state.
 
 > Learn by doing · inspect before replacing · diagnose before repairing · validate before closing the ticket.
 
-**Status: Phase 1 (interactive foundation) is complete.** See `IMPLEMENTATION_ROADMAP.md`.
+**Status: Phase 1 (interactive foundation) and Phase 2 (physical interaction, technician laptop, network layer) are complete.** See `IMPLEMENTATION_ROADMAP.md`.
 
 ## Quick start
 
@@ -55,6 +55,13 @@ sync is planned for Phase 6.
 | Cooling & Power | Feeds, PDUs, busbars, CDU loops, CRAH setpoint control |
 | Work Orders | Six tickets. Start injects the hidden fault; validation is evaluated against the engine |
 | Settings | Training mode, developer mode with fault injection (19 fault types), reset |
+| Technician laptop (top bar) | Crash cart with RJ45 / USB / USB-C power ports; network settings (DHCP, static, VLAN tag), ping, SSH, a browser with the BMC web UI, and a serial console. Everything depends on real cabling, VLANs, IPs and the firewall |
+| Cabling (Rack Explorer) | Cable tray with drag-and-drop onto ports (refusals explained by the engine), cable rendering, VLAN editing on switch ports, drag servers onto free U |
+
+New in Phase 2: try **DCT-0008**. Drag a Cat6 cable from the cable tray onto the laptop's eth0
+port (below the rack in Rack Explorer), then drag the cable-in-hand chip onto a free OOB switch
+port. Open **Laptop** in the top bar and SSH to `dh1-r05-gb200-ct01-bmc`. Then try **DCT-0007**:
+a BMC whose link LED is green but that nobody can reach.
 
 Try the seeded ticket **DCT-0002**: dh1-r02-n04 lost power redundancy. Find it from the
 dashboard alert, switch Rack Explorer to the rear view, select the empty PSU 2 inlet, connect a

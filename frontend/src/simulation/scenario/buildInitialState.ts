@@ -14,6 +14,59 @@ import type { WorkloadProfile } from '@/types/catalog';
 import type { Equipment, FeedId, Id, SimulationState } from '@/types/simulation';
 import { addRack, connect, emptyState, newCable, newComponent, newEquipment } from './factory';
 import { freeUnits } from '@/simulation/hardware/Rack';
+import { peerPort } from '@/simulation/core/SimulationState';
+import { isSwitchingPort } from '@/simulation/networking/Vlan';
+import { LAPTOP_ID } from '@/simulation/workstation/Workstation';
+
+export const OOB_VLAN = 10;
+export const DATA_VLAN = 100;
+
+/** Trunk inter-switch links, access ports toward endpoints, per switch's network. */
+function configureVlans(s: SimulationState): void {
+  for (const eq of Object.values(s.equipment)) {
+    if (eq.kind !== 'switch' || eq.location.kind !== 'rack') continue;
+    const vlan = eq.modelId === 'sw-mgmt-1g-ref' || eq.id === 'agg-r04' ? OOB_VLAN : DATA_VLAN;
+    for (const pid of eq.portIds) {
+      const p = s.ports[pid];
+      if (!isSwitchingPort(s, p)) continue;
+      const peer = peerPort(s, p);
+      const trunk = peer ? isSwitchingPort(s, peer) : p.role === 'uplink';
+      p.vlan = trunk ? { mode: 'trunk', access: 1, allowed: [vlan], native: 1 } : { mode: 'access', access: vlan, allowed: [], native: 1 };
+    }
+  }
+}
+
+/**
+ * IP plan: BMC / switch management 10.10.<rack>.<n>/16 (OOB), host data
+ * 10.100.<rack>.<n>/16. A host keeps the same <n> on both networks.
+ */
+function assignAddresses(s: SimulationState): void {
+  for (const rack of Object.values(s.racks)) {
+    const r = Number(rack.id.slice(1));
+    let host = 11;
+    let sw = 2;
+    const mounted = Object.values(s.equipment)
+      .filter((e) => e.location.kind === 'rack' && e.location.rackId === rack.id && e.location.uStart !== null)
+      .sort((a, b) => (a.location.kind === 'rack' && b.location.kind === 'rack' ? (a.location.uStart ?? 0) - (b.location.uStart ?? 0) : 0));
+    for (const eq of mounted) {
+      const ports = eq.portIds.map((id) => s.ports[id]);
+      const bmc = ports.find((p) => p.role === 'bmc' && p.cableId);
+      if (!bmc) continue;
+      const n = eq.kind === 'switch' ? sw++ : host++;
+      bmc.ip = { address: `10.10.${r}.${n}`, prefix: 16, gateway: '10.10.0.1' };
+      const data = ports.find((p) => (p.slotId === 'ocp0' || p.slotId === 'dpu0') && p.defId === 'p0' && p.cableId);
+      if (data && eq.kind !== 'switch') data.ip = { address: `10.100.${r}.${n}`, prefix: 16, gateway: '10.100.0.1' };
+    }
+  }
+}
+
+function presetAddresses(s: SimulationState, eqId: string, bmc: string, data: string): void {
+  for (const pid of s.equipment[eqId].portIds) {
+    const p = s.ports[pid];
+    if (p.role === 'bmc') p.ip = { address: bmc, prefix: 16, gateway: '10.10.0.1' };
+    if ((p.slotId === 'ocp0' || p.slotId === 'dpu0') && p.defId === 'p0') p.ip = { address: data, prefix: 16, gateway: '10.100.0.1' };
+  }
+}
 
 const counters: Record<string, number> = {};
 function take(key: string, start: number, max: number): number {
@@ -275,6 +328,9 @@ export function buildInitialState(): SimulationState {
   }
   newEquipment(s, { id: 'spare-srv-1u-01', modelId: 'srv-1u-ref', hostname: 'dh1-new-n01', location: { kind: 'inventory' } });
   newEquipment(s, { id: 'spare-ct-gb200-01', modelId: 'ct-gb200-ref', hostname: 'dh1-spare-gb200-ct', location: { kind: 'inventory' }, workload: 'training' });
+  // Staged hardware arrives with DCIM-reserved addresses.
+  presetAddresses(s, 'spare-srv-1u-01', '10.10.1.30', '10.100.1.30');
+  presetAddresses(s, 'spare-ct-gb200-01', '10.10.5.199', '10.100.5.199');
   for (let i = 1; i <= 4; i++) newEquipment(s, { id: `spare-blank-1u-${i}`, modelId: 'blank-1u', hostname: `Spare blank ${i}`, location: { kind: 'inventory' } });
 
   const spareCables: [string, number][] = [
@@ -299,6 +355,30 @@ export function buildInitialState(): SimulationState {
     ['console-rj45-usb', 1],
   ];
   for (const [modelId, count] of spareCables) for (let i = 0; i < count; i++) newCable(s, modelId);
+
+  // --- Networks: OOB management (VLAN 10, DHCP for technician devices) and front-end data (VLAN 100)
+  s.facility.networks = [
+    {
+      id: 'oob',
+      name: 'Out-of-band management',
+      vlan: OOB_VLAN,
+      cidr: '10.10.0.0/16',
+      gateway: '10.10.0.1',
+      routerId: 'agg-r04',
+      dhcp: { start: '10.10.250.100', end: '10.10.250.199', dns: '10.10.0.53' },
+      services: [{ address: '10.10.0.53', name: 'dns01', kind: 'dns' }],
+    },
+    { id: 'data', name: 'Front-end data', vlan: DATA_VLAN, cidr: '10.100.0.0/16', gateway: '10.100.0.1', routerId: 'spine-r04-1' },
+  ];
+  s.facility.firewall = [
+    { name: 'FW-OOB-ISOLATION', from: 'oob', to: 'data', action: 'deny' },
+    { name: 'FW-OOB-ISOLATION', from: 'data', to: 'oob', action: 'deny' },
+  ];
+  configureVlans(s);
+  assignAddresses(s);
+
+  // --- Technician laptop on its crash cart, parked behind R01 (hot aisle), on battery
+  newEquipment(s, { id: LAPTOP_ID, modelId: 'laptop-tech-ref', hostname: 'tech-laptop', location: { kind: 'cart', rackId: 'R01', side: 'rear' } });
 
   return s;
 }

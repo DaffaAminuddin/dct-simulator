@@ -9,6 +9,7 @@ import { HOST_KINDS } from '@/simulation/core/SimulationState';
 import { hash32, serialFor } from '@/simulation/core/util';
 import { createComponentPorts } from '@/simulation/hardware/Compatibility';
 import { CAGE_ACCEPTS, checkFit, requiredLengthM } from '@/simulation/networking/Cable';
+import { defaultWorkstation } from '@/simulation/workstation/Workstation';
 import type { PortDef, WorkloadProfile } from '@/types/catalog';
 import type {
   Cable,
@@ -25,7 +26,7 @@ import type {
 
 export function emptyState(): SimulationState {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     timeMs: 0,
     startedAt: '2026-11-08T08:00:00Z',
     seq: { event: 0, fault: 0, cable: 0, sel: 0 },
@@ -40,6 +41,8 @@ export function emptyState(): SimulationState {
         B: { id: 'B', name: 'Feed B (UPS-B)', capacityW: 600000, up: true, loadW: 0 },
       },
       rows: [],
+      networks: [],
+      firewall: [],
     },
     racks: {},
     equipment: {},
@@ -48,6 +51,7 @@ export function emptyState(): SimulationState {
     cables: {},
     faults: {},
     events: [],
+    workstation: defaultWorkstation(),
   };
 }
 

@@ -67,7 +67,13 @@ export interface FloorLocation {
 export interface InventoryLocation {
   kind: 'inventory';
 }
-export type EquipmentLocation = RackLocation | FloorLocation | InventoryLocation;
+/** Technician crash cart parked at a rack (front = cold aisle, rear = hot aisle). */
+export interface CartLocation {
+  kind: 'cart';
+  rackId: Id;
+  side: 'front' | 'rear';
+}
+export type EquipmentLocation = RackLocation | FloorLocation | InventoryLocation | CartLocation;
 
 export interface SelEntry {
   id: number;
@@ -178,6 +184,26 @@ export interface PortTransceiver {
   serial: string;
 }
 
+/** 802.1Q configuration of an Ethernet switch port. */
+export interface VlanConfig {
+  mode: 'access' | 'trunk';
+  /** Access VLAN (access mode). */
+  access: number;
+  /** Allowed tagged VLANs (trunk mode). */
+  allowed: number[];
+  /** Untagged VLAN on a trunk. */
+  native: number;
+}
+
+/** IPv4 configuration of an endpoint interface (BMC, host NIC, switch management port). */
+export interface IpConfig {
+  address: string;
+  prefix: number;
+  gateway?: string;
+  /** 802.1Q tag the endpoint sends; null/undefined = untagged. */
+  vlan?: number | null;
+}
+
 export interface Port {
   id: Id;
   equipmentId: Id;
@@ -197,6 +223,10 @@ export interface Port {
   transceiver?: PortTransceiver;
   cableId: Id | null;
   cableEnd: 0 | 1 | null;
+  /** Switch ports: VLAN configuration. */
+  vlan?: VlanConfig;
+  /** Endpoint interfaces: IP configuration. */
+  ip?: IpConfig;
 
   // --- derived ---
   state: PortState;
@@ -313,6 +343,28 @@ export interface Row {
   rackIds: Id[];
 }
 
+/** An IP network carried on one VLAN, routed by an SVI on `routerId`. */
+export interface NetworkDef {
+  id: string;
+  name: string;
+  vlan: number;
+  /** e.g. 10.10.0.0/16 */
+  cidr: string;
+  gateway: string;
+  /** Switch hosting the gateway SVI (and DHCP/DNS services when present). */
+  routerId: Id;
+  dhcp?: { start: string; end: string; dns: string };
+  /** Extra service addresses hosted on the router in this network (e.g. DNS). */
+  services?: { address: string; name: string; kind: 'dns' }[];
+}
+
+export interface FirewallRule {
+  name: string;
+  from: string;
+  to: string;
+  action: 'allow' | 'deny';
+}
+
 export interface Facility {
   id: string;
   name: string;
@@ -322,6 +374,45 @@ export interface Facility {
   dimensions: { width: number; depth: number };
   feeds: Record<FeedId, Feed>;
   rows: Row[];
+  networks: NetworkDef[];
+  firewall: FirewallRule[];
+}
+
+export interface WorkstationNetConfig {
+  mode: 'dhcp' | 'static';
+  address: string;
+  prefix: number;
+  gateway: string;
+  dns: string;
+  /** 802.1Q tag; null = untagged. */
+  vlan: number | null;
+  adminUp: boolean;
+}
+
+export interface EffectiveIp {
+  address: string;
+  prefix: number;
+  gateway: string;
+  dns: string;
+  source: 'dhcp' | 'static' | 'apipa' | 'none';
+  /** Network id the address belongs to, if any. */
+  networkId?: string;
+}
+
+/** The technician laptop (one per learner). */
+export interface WorkstationState {
+  equipmentId: Id;
+  net: WorkstationNetConfig;
+  batteryPct: number;
+  // --- derived ---
+  onAc: boolean;
+  poweredOn: boolean;
+  effective: EffectiveIp;
+  /** Address conflict detected on the local segment. */
+  conflict: boolean;
+  /** Host reached through the serial console cable, if any. */
+  consoleEquipmentId: Id | null;
+  consoleReason?: string;
 }
 
 export type EventCategory =
@@ -351,7 +442,7 @@ export interface SimEvent {
 }
 
 export interface SimulationState {
-  schemaVersion: 1;
+  schemaVersion: 2;
   /** Simulated milliseconds since the scenario started. */
   timeMs: number;
   /** Wall-clock anchor for display (ISO string). */
@@ -365,6 +456,7 @@ export interface SimulationState {
   cables: Record<Id, Cable>;
   faults: Record<Id, Fault>;
   events: SimEvent[];
+  workstation: WorkstationState;
 }
 
 // ---------------------------------------------------------------------------
@@ -393,7 +485,10 @@ export type SimAction =
       source?: Fault['source'];
     }
   | { type: 'fault/clear'; faultId: Id }
-  | { type: 'facility/setCrahSupply'; tempC: number };
+  | { type: 'facility/setCrahSupply'; tempC: number }
+  | { type: 'port/setVlan'; portId: Id; vlan: VlanConfig }
+  | { type: 'workstation/configure'; net: Partial<WorkstationNetConfig> }
+  | { type: 'workstation/move'; rackId: Id; side: 'front' | 'rear' };
 
 export type ActionResult =
   | { ok: true; warnings: string[] }

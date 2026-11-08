@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/select';
 import { getEquipmentModel } from '@/data/hardware/equipmentCatalog';
 import { equipmentInRack, isHost } from '@/simulation/core/SimulationState';
 import { freeUnits, placementChecks } from '@/simulation/hardware/Rack';
+import { EQUIPMENT_MIME, setDrag } from '@/hooks/useCableActions';
 import { useAct } from '@/stores/hardwareStore';
 import { useSim } from '@/stores/simulationStore';
 import type { Id } from '@/types/simulation';
@@ -141,7 +142,26 @@ export function RackSummary({ rackId, preselectU }: { rackId: Id; preselectU?: n
               >
                 <ArrowDownToLine /> Mount at U{targetU ?? '—'}
               </Button>
-              <Callout tone="info">New equipment is mounted powered off. Cable power, management and data first, then power on. Drag-and-drop mounting arrives in Phase 2.</Callout>
+              <div className="flex flex-wrap gap-1.5" aria-label="Drag to a free U">
+                {inventory.map((e) => (
+                  <span
+                    key={e.id}
+                    draggable
+                    data-inventory-equipment={e.id}
+                    onDragStart={(ev) => {
+                      setDrag({ kind: 'equipment', equipmentId: e.id });
+                      ev.dataTransfer.setData(EQUIPMENT_MIME, e.id);
+                      ev.dataTransfer.effectAllowed = 'move';
+                    }}
+                    onDragEnd={() => setDrag(null)}
+                    className="cursor-grab rounded-[4px] border border-border-strong bg-surface-3 px-2 py-1 font-mono text-[11px] active:cursor-grabbing"
+                    title="Drag onto a free U in the elevation"
+                  >
+                    ⠿ {e.hostname} ({getEquipmentModel(e.modelId).heightU}U)
+                  </span>
+                ))}
+              </div>
+              <Callout tone="info">Drag a chip onto a free U in the elevation, or use the selectors above. New equipment is mounted powered off: cable power, management and data first, then power on.</Callout>
             </>
           )}
         </div>

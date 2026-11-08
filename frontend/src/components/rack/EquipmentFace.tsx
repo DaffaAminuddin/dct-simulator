@@ -37,7 +37,7 @@ const DEV_PORT: Record<Port['state'], string> = {
   faulty: 'bg-crit',
 };
 
-function PortGlyph({ s, port, x, row, rows, heightPx, selected, devMode, onClick }: { s: SimulationState; port: Port; x: number; row: number; rows: number; heightPx: number; selected: boolean; devMode: boolean; onClick: () => void }) {
+export function PortGlyph({ s, port, x, row, rows, heightPx, selected, devMode, onClick }: { s: SimulationState; port: Port; x: number; row: number; rows: number; heightPx: number; selected: boolean; devMode: boolean; onClick: () => void }) {
   const [w, h] = PORT_SIZE[port.type];
   const cable = port.cableId ? s.cables[port.cableId] : undefined;
   const color = cable ? getCableModel(cable.modelId).color : undefined;

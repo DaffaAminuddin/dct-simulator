@@ -93,6 +93,7 @@ export function RackElevation({ rackId, side, selectedEquipmentId, selectedPortI
                 key={`free-${u}`}
                 type="button"
                 aria-label={`Empty U${u}`}
+                data-free-u={u}
                 onClick={() => onSelectFreeU?.(u)}
                 className={cn('absolute inset-x-0 border-b border-[#111416] text-left text-[8px] text-transparent hover:bg-accent/5 hover:text-subtle', selectedFreeU === u && 'bg-accent/10 text-accent shadow-[inset_0_0_0_1px_var(--color-accent-dim)]')}
                 style={{ top: uTop(u, 1), height: U_PX }}

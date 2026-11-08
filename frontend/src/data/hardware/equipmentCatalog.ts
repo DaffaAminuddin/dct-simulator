@@ -607,6 +607,34 @@ add({
   defaults: { pump0: 'pump-cdu-ref', pump1: 'pump-cdu-ref' },
 });
 
+add({
+  id: 'laptop-tech-ref',
+  kind: 'laptop',
+  name: 'Technician laptop on crash cart (reference)',
+  shortName: 'Tech laptop',
+  manufacturer: 'Generic reference',
+  heightU: 0,
+  weightKg: 1.8,
+  rackTypes: [],
+  cooling: 'air',
+  baseW: 0,
+  powerPath: 'none',
+  bootTimeMs: 0,
+  postMs: 0,
+  accuracy: 'reference',
+  description:
+    'Field laptop: 1 GbE RJ45 (eth0), two USB-A ports (USB serial console adapters), USB-C power delivery and HDMI. Runs on battery unless its adapter is plugged into a live PDU outlet.',
+  slots: [],
+  ports: [
+    port({ id: 'eth0', label: 'Ethernet eth0', osName: 'eth0', type: 'rj45', role: 'tech', speedsGbps: [1, 0.1], side: 'front', panelX: 6 }),
+    port({ id: 'usb0', label: 'USB-A 1', osName: 'ttyUSB0', type: 'usb_a', role: 'usb', speedsGbps: [], side: 'front', panelX: 26 }),
+    port({ id: 'usb1', label: 'USB-A 2', osName: 'ttyUSB1', type: 'usb_a', role: 'usb', speedsGbps: [], side: 'front', panelX: 40 }),
+    port({ id: 'usbc0', label: 'USB-C (PD power)', type: 'usb_c', role: 'power_in', speedsGbps: [], side: 'front', panelX: 58 }),
+    port({ id: 'hdmi0', label: 'HDMI', type: 'hdmi', role: 'video', speedsGbps: [], side: 'front', panelX: 76 }),
+  ],
+  defaults: {},
+});
+
 export function getEquipmentModel(id: string): EquipmentModel {
   const m = EQUIPMENT_MODELS[id];
   if (!m) throw new Error(`Unknown equipment model: ${id}`);

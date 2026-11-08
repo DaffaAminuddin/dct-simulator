@@ -1,10 +1,12 @@
-import { Cable, FastForward, Menu, Pause, Play, X } from 'lucide-react';
+import { Cable, FastForward, Laptop, Menu, Pause, Play, X } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Badge, StatusDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { getCableModel } from '@/data/cables/cableCatalog';
+import { CABLE_MIME, setDrag, useCableActions } from '@/hooks/useCableActions';
+import { CONNECTOR_LABEL } from '@/simulation/networking/Cable';
 import { isHost } from '@/simulation/core/SimulationState';
 import { SPEEDS, type ClockSpeed } from '@/simulation/core/SimulationClock';
 import { monitoringAlerts } from '@/simulation/diagnostics/DiagnosticEngine';
@@ -49,6 +51,9 @@ export function TopBar() {
   const inHand = useUiStore((s) => s.cableInHand);
   const setInHand = useUiStore((s) => s.setCableInHand);
   const cable = useSim((s) => (inHand ? s.cables[inHand.cableId] : undefined));
+  const laptopOpen = useUiStore((s) => s.laptopOpen);
+  const setLaptopOpen = useUiStore((s) => s.setLaptopOpen);
+  const { stow } = useCableActions();
 
   const current = NAV.filter((n) => (n.to === '/' ? location.pathname === '/' : location.pathname.startsWith(n.to))).at(-1);
 
@@ -60,10 +65,22 @@ export function TopBar() {
       <h1 className="truncate text-[13px] font-semibold">{current?.label ?? 'DCT Simulator'}</h1>
 
       {inHand && cable && (
-        <div className="hidden items-center gap-1.5 rounded-[5px] border border-info/40 bg-info/10 px-2 py-1 text-[11.5px] text-[#9fd0f3] md:flex" role="status">
+        <div
+          draggable
+          onDragStart={(e) => {
+            setDrag({ kind: 'cable', cableId: cable.id });
+            e.dataTransfer.setData(CABLE_MIME, cable.id);
+          }}
+          onDragEnd={() => setDrag(null)}
+          className="hidden cursor-grab items-center gap-1.5 rounded-[5px] border border-info/40 bg-info/10 px-2 py-1 text-[11.5px] text-[#9fd0f3] md:flex"
+          role="status"
+          title="Drag onto a port, or select a port and choose Plug in here"
+          data-testid="cable-in-hand"
+        >
           <Cable className="size-3.5" />
-          In hand: {getCableModel(cable.modelId).shortName} · end {inHand.freeEnd === 0 ? 'A' : 'B'} free. Select a port to plug it in
-          <button type="button" aria-label="Put the cable down" className="ml-1 hover:text-fg" onClick={() => setInHand(null)}>
+          In hand: {getCableModel(cable.modelId).shortName} ·{' '}
+          {inHand.freeEnd === null ? 'both ends free' : `${CONNECTOR_LABEL[getCableModel(cable.modelId).ends[inHand.freeEnd]]} free`}
+          <button type="button" aria-label="Put the cable back in the spares cage" title="Put back in the spares cage" className="ml-1 hover:text-fg" onClick={() => (cable.ends[0].portId || cable.ends[1].portId ? setInHand(null) : stow(cable.id))}>
             <X className="size-3.5" />
           </button>
         </div>
@@ -88,6 +105,9 @@ export function TopBar() {
           <span className="tabular">IT {formatW(sum.load)}</span>
         </Link>
 
+        <Button size="sm" variant={laptopOpen ? 'primary' : 'outline'} onClick={() => setLaptopOpen(!laptopOpen)} aria-pressed={laptopOpen} title="Technician laptop">
+          <Laptop /> <span className="hidden sm:inline">Laptop</span>
+        </Button>
         <div className="flex items-center gap-1 rounded-[5px] border border-border-strong bg-surface-2 py-0.5 pr-0.5 pl-2">
           <span className="font-mono text-[11.5px] tabular text-fg" aria-label="Simulation time">
             <span className="hidden sm:inline">{formatSimTime(startedAt, timeMs).slice(0, 11)}</span>

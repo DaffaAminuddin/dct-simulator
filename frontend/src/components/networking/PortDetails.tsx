@@ -1,21 +1,76 @@
 /**
- * Port inspector with the physical cable workflow:
- * unplug → cable in hand → plug into another port (validated by the engine).
+ * Port inspector with the physical cable workflow (unplug → cable in hand →
+ * plug elsewhere), switch-port VLAN configuration and endpoint IP details.
+ * Every change goes through the engine.
  */
 import { Cable, Plug, PlugZap, Power, Unplug, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Callout, Mono } from '@/components/ui/misc';
 import { KV, Panel } from '@/components/ui/panel';
-import { Select } from '@/components/ui/select';
+import { Input, Select } from '@/components/ui/select';
 import { getCableModel, getTransceiverModel } from '@/data/cables/cableCatalog';
-import { checkFit, PORT_TYPE_LABEL } from '@/simulation/networking/Cable';
+import { endFor, useCableActions } from '@/hooks/useCableActions';
+import { checkFit, CONNECTOR_LABEL, PORT_TYPE_LABEL } from '@/simulation/networking/Cable';
+import { describeVlan, isSwitchingPort, vlanOf } from '@/simulation/networking/Vlan';
 import { useAct, useDevMode, usePort } from '@/stores/hardwareStore';
-import { useSim, useSimulationStore } from '@/stores/simulationStore';
+import { getSim, useSim } from '@/stores/simulationStore';
 import { useUiStore } from '@/stores/uiStore';
-import type { Id } from '@/types/simulation';
+import type { Id, VlanConfig } from '@/types/simulation';
 import { formatSpeed, PORT_STATE_TEXT, portTone } from '@/utils/format';
+
+function VlanEditor({ portId, current }: { portId: Id; current: VlanConfig }) {
+  const act = useAct();
+  const [mode, setMode] = useState(current.mode);
+  const [access, setAccess] = useState(String(current.access));
+  const [allowed, setAllowed] = useState(current.allowed.join(','));
+  const [native, setNative] = useState(String(current.native));
+  useEffect(() => {
+    setMode(current.mode);
+    setAccess(String(current.access));
+    setAllowed(current.allowed.join(','));
+    setNative(String(current.native));
+  }, [current]);
+  const apply = () => {
+    const list = allowed
+      .split(/[\s,]+/)
+      .filter(Boolean)
+      .map(Number);
+    act({ type: 'port/setVlan', portId, vlan: { mode, access: Number(access), allowed: list, native: Number(native) } }, 'Switch port VLAN updated');
+  };
+  return (
+    <div className="space-y-2 border-t border-border pt-2">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-subtle">Switchport (802.1Q)</div>
+      <div className="flex flex-wrap items-center gap-2 text-[12px]">
+        <Select aria-label="Switchport mode" value={mode} onChange={(e) => setMode(e.target.value as VlanConfig['mode'])}>
+          <option value="access">access</option>
+          <option value="trunk">trunk</option>
+        </Select>
+        {mode === 'access' ? (
+          <label className="flex items-center gap-1 text-muted">
+            VLAN
+            <Input aria-label="Access VLAN" value={access} onChange={(e) => setAccess(e.target.value)} className="w-16" inputMode="numeric" />
+          </label>
+        ) : (
+          <>
+            <label className="flex items-center gap-1 text-muted">
+              allowed
+              <Input aria-label="Allowed VLANs" value={allowed} onChange={(e) => setAllowed(e.target.value)} className="w-24" />
+            </label>
+            <label className="flex items-center gap-1 text-muted">
+              native
+              <Input aria-label="Native VLAN" value={native} onChange={(e) => setNative(e.target.value)} className="w-14" inputMode="numeric" />
+            </label>
+          </>
+        )}
+        <Button size="xs" variant="primary" onClick={apply}>
+          Apply
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: () => void; onJump: (portId: Id) => void }) {
   const port = usePort(portId);
@@ -28,6 +83,7 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
   const setInHand = useUiStore((s) => s.setCableInHand);
   const devMode = useDevMode();
   const act = useAct();
+  const { plug, unplug } = useCableActions();
   const [pick, setPick] = useState('');
 
   const inHandCable = inHand ? cables[inHand.cableId] : undefined;
@@ -35,15 +91,14 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
   /** Inventory cables (both ends free) that fit this port at either end, one entry per model. */
   const candidates = useMemo(() => {
     if (!port || port.cableId) return [];
-    const byModel = new Map<string, { cableId: Id; end: 0 | 1; count: number }>();
+    const byModel = new Map<string, { cableId: Id; count: number }>();
     for (const c of Object.values(cables)) {
       if (c.ends[0].portId || c.ends[1].portId) continue;
       const m = getCableModel(c.modelId);
-      const end = checkFit(port, m.ends[0]).ok ? 0 : checkFit(port, m.ends[1]).ok ? 1 : -1;
-      if (end < 0) continue;
+      if (!checkFit(port, m.ends[0]).ok && !checkFit(port, m.ends[1]).ok) continue;
       const cur = byModel.get(m.id);
       if (cur) cur.count++;
-      else byModel.set(m.id, { cableId: c.id, end: end as 0 | 1, count: 1 });
+      else byModel.set(m.id, { cableId: c.id, count: 1 });
     }
     return [...byModel.entries()].map(([modelId, v]) => ({ modelId, ...v }));
   }, [cables, port]);
@@ -51,33 +106,19 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
   if (!port || !eq) return null;
 
   const isPower = port.role === 'power_in' || port.role === 'power_out';
+  const switching = isSwitchingPort(getSim(), port);
   const isSwitchPort = eq.kind === 'switch' && port.role !== 'console';
-
-  const unplug = () => {
-    if (!cable || port.cableEnd === null) return;
-    const end = port.cableEnd;
-    const r = act({ type: 'cable/disconnect', cableId: cable.id, end }, `Unplugged ${getCableModel(cable.modelId).shortName} from ${port.label}`);
-    if (r.ok) setInHand({ cableId: cable.id, freeEnd: end });
-  };
-
-  const plugInHand = () => {
-    if (!inHand) return;
-    const r = act({ type: 'cable/connect', cableId: inHand.cableId, end: inHand.freeEnd, portId: port.id }, `Plugged into ${port.label}`);
-    if (!r.ok) return;
-    const c = useSimulationStore.getState().state.cables[inHand.cableId];
-    const other = inHand.freeEnd === 0 ? 1 : 0;
-    setInHand(c.ends[other].portId ? null : { cableId: c.id, freeEnd: other });
-  };
+  const xcvr = port.transceiver ? getTransceiverModel(port.transceiver.modelId) : undefined;
+  const cableModel = cable ? getCableModel(cable.modelId) : undefined;
+  const handFit = inHandCable ? endFor(getSim(), inHandCable.id, port.id) : null;
+  const handEndLabel = inHandCable ? (inHand?.freeEnd === null || inHand?.freeEnd === undefined ? 'both ends free' : `${CONNECTOR_LABEL[getCableModel(inHandCable.modelId).ends[inHand.freeEnd]]} free`) : '';
 
   const takeFromInventory = () => {
     const cand = candidates.find((c) => c.modelId === pick) ?? candidates[0];
     if (!cand) return;
-    const r = act({ type: 'cable/connect', cableId: cand.cableId, end: cand.end, portId: port.id }, `Connected ${getCableModel(cand.modelId).shortName} to ${port.label}`);
-    if (r.ok) setInHand({ cableId: cand.cableId, freeEnd: cand.end === 0 ? 1 : 0 });
+    setInHand({ cableId: cand.cableId, freeEnd: null });
+    plug(cand.cableId, port.id);
   };
-
-  const xcvr = port.transceiver ? getTransceiverModel(port.transceiver.modelId) : undefined;
-  const cableModel = cable ? getCableModel(cable.modelId) : undefined;
 
   return (
     <Panel
@@ -86,7 +127,7 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
           <Plug className="size-3.5" /> Port
         </span>
       }
-      subtitle={`${eq.hostname} · ${port.side} panel`}
+      subtitle={`${eq.hostname} · ${eq.kind === 'laptop' ? 'laptop' : `${port.side} panel`}`}
       actions={
         <Button size="icon" variant="ghost" aria-label="Close port details" onClick={onClose}>
           <X />
@@ -109,6 +150,8 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
             ...(port.reason ? ([['Reason', port.reason]] as [string, string][]) : []),
             ...(port.role === 'power_out' ? ([['Outlet', port.live ? 'Energised' : 'Dead']] as [string, string][]) : []),
             ...(xcvr ? ([['Transceiver', `${xcvr.name} (${xcvr.media.toUpperCase()}, ${xcvr.receptacle === 'mpo12' ? 'MPO-12' : 'LC'})`]] as [string, string][]) : []),
+            ...(port.ip ? ([['IP address', <Mono key="ip">{`${port.ip.address}/${port.ip.prefix}${port.ip.gateway ? ` gw ${port.ip.gateway}` : ''}`}</Mono>]] as [string, React.ReactNode][]) : []),
+            ...(switching ? ([['Switchport', describeVlan(vlanOf(port))]] as [string, string][]) : []),
             ['Admin state', port.adminUp ? 'Enabled' : 'Disabled'],
           ]}
         />
@@ -123,27 +166,32 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
               rows={[
                 ['Cable', <Mono key="c">{cable.label}</Mono>],
                 ['Serial', <Mono key="s">{cable.serial}</Mono>],
-                ['Far end', peer && peerEq ? (
-                  <button key="f" type="button" className="text-left text-accent-strong hover:underline" onClick={() => onJump(peer.id)}>
-                    {peerEq.hostname} · {peer.label}
-                  </button>
-                ) : (
-                  <span key="f" className="text-warn">Not plugged in</span>
-                )],
+                [
+                  'Far end',
+                  peer && peerEq ? (
+                    <button key="f" type="button" className="text-left text-accent-strong hover:underline" onClick={() => onJump(peer.id)}>
+                      {peerEq.hostname} · {peer.label}
+                    </button>
+                  ) : (
+                    <span key="f" className="text-warn">
+                      Not plugged in
+                    </span>
+                  ),
+                ],
                 ['Cable state', cable.state + (cable.reason ? ` (${cable.reason})` : '')],
               ]}
             />
-            <Button variant="outline" onClick={unplug}>
+            <Button variant="outline" onClick={() => unplug(port.id)}>
               <Unplug /> Unplug this end
             </Button>
           </div>
         ) : inHand && inHandCable ? (
           <div className="space-y-2">
-            <Callout tone="info" title={`Cable in hand: ${getCableModel(inHandCable.modelId).shortName}`}>
-              End {inHand.freeEnd === 0 ? 'A' : 'B'} ({getCableModel(inHandCable.modelId).ends[inHand.freeEnd].replace('_', ' ').toUpperCase()} plug) is free. The engine will check connector fit and cable length.
+            <Callout tone={handFit?.end === null ? 'warn' : 'info'} title={`Cable in hand: ${getCableModel(inHandCable.modelId).shortName}`}>
+              {handEndLabel}. {handFit?.end === null ? `It will not fit here: ${handFit.reason}.` : 'The engine checks connector fit and cable length when you plug in.'}
             </Callout>
             <div className="flex gap-2">
-              <Button variant="primary" onClick={plugInHand}>
+              <Button variant="primary" onClick={() => plug(inHandCable.id, port.id)}>
                 <PlugZap /> Plug in here
               </Button>
               <Button variant="ghost" onClick={() => setInHand(null)}>
@@ -153,7 +201,7 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="text-[12px] text-muted">Empty port. Take a cable from the spares cage (only types whose plug fits are listed):</div>
+            <div className="text-[12px] text-muted">Empty port. Take a cable from the spares cage (only types whose plug fits are listed), or drag one from the cable tray:</div>
             {candidates.length === 0 ? (
               <div className="text-[12px] text-subtle">No compatible cable in inventory.</div>
             ) : (
@@ -173,6 +221,7 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
           </div>
         )}
 
+        {switching && <VlanEditor portId={port.id} current={vlanOf(port)} />}
         {isSwitchPort && (
           <div className="flex items-center gap-2 border-t border-border pt-2">
             <span className="text-[12px] text-muted">Switch port admin</span>
@@ -181,7 +230,7 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
             </Button>
           </div>
         )}
-        {devMode && !isPower && (
+        {devMode && !isPower && eq.kind !== 'laptop' && (
           <div className="flex flex-wrap gap-2 border-t border-border pt-2">
             <Button size="xs" variant="danger" onClick={() => act({ type: 'fault/inject', faultType: 'port_faulty', targetId: port.id }, 'Port fault injected')}>
               Inject port fault

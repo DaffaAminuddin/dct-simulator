@@ -13,6 +13,10 @@ const PASSIVE_ROLES = new Set(['power_in', 'power_out', 'usb', 'console', 'video
 /** Is the PHY behind this port powered and enumerated? */
 export function portEnergised(s: SimulationState, port: Port): { ok: boolean; reason?: string } {
   const eq = s.equipment[port.equipmentId];
+  if (eq.kind === 'laptop') {
+    if (!s.workstation.poweredOn) return { ok: false, reason: 'laptop powered off' };
+    return s.workstation.net.adminUp ? { ok: true } : { ok: false, reason: 'interface administratively down' };
+  }
   if (eq.kind === 'switch') return OS_STATES.has(eq.state) ? { ok: true } : { ok: false, reason: 'switch not running' };
   if (port.role === 'bmc') return eq.bmcAlive ? { ok: true } : { ok: false, reason: 'BMC not running' };
   if (!isMainPowerOn(eq)) return { ok: false, reason: 'host powered off' };

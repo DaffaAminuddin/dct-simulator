@@ -7,6 +7,7 @@
 import { getEquipmentModel } from '@/data/hardware/equipmentCatalog';
 import { componentInSlot, portsOf } from '@/simulation/core/SimulationState';
 import { bmcReachability } from '@/simulation/networking/NetworkTopology';
+import { sshConnect } from '@/simulation/networking/Reachability';
 import { feedRedundancyIssues } from '@/simulation/hardware/Rack';
 import type { Id, SimAction, SimulationState } from '@/types/simulation';
 
@@ -212,6 +213,57 @@ export const WORK_ORDERS: WorkOrderDef[] = [
     },
     targetTimeS: 600,
   },
+  {
+    id: 'DCT-0007',
+    title: 'BMC unreachable after a network change',
+    priority: 'P2',
+    location: { rackId: 'R03', u: 'U12–U15', equipmentId: 'srv-r03-g02' },
+    issue: 'Out-of-band monitoring lost dh1-r03-g02 right after last night’s change window on the R03 management switch.',
+    symptoms: ['BMC does not answer from the NOC', 'Link LED on the BMC port is lit', 'Host OS and GPUs are running normally', 'No power or hardware alarms'],
+    objective: 'Restore out-of-band access to the BMC without touching the server.',
+    tasks: [
+      'Check the BMC port and its link LED',
+      'Patch the laptop into the R03 OOB switch',
+      'Try to reach the BMC from the laptop',
+      'Compare the switch port configuration with its neighbours',
+      'Correct the configuration',
+      'Verify from the laptop and from monitoring',
+    ],
+    moduleId: 'network-troubleshooting',
+    difficulty: 'intermediate',
+    setup: [{ type: 'port/setVlan', portId: '@peer:srv-r03-g02:bmc', vlan: { mode: 'access', access: 20, allowed: [], native: 1 } }],
+    hint: 'The link LED is green, so layer 1 is fine and the problem is above it. In the R03 rear view, select the OOB switch port the BMC cable lands on and compare its switchport VLAN with the other BMC ports.',
+    validate: (s) => {
+      const bmc = s.ports['srv-r03-g02:bmc'];
+      const sw = bmc?.peerPortId ? s.ports[bmc.peerPortId] : undefined;
+      return [
+        { label: 'BMC cable still in its original port', ok: !!sw && sw.equipmentId === 'oob-r03' },
+        { label: 'Switch port is an access port in the OOB VLAN (10)', ok: sw?.vlan?.mode === 'access' && sw.vlan.access === 10 },
+        { label: 'BMC reachable from the management network', ok: bmcReachability(s, 'srv-r03-g02').reachable },
+      ];
+    },
+    targetTimeS: 420,
+  },
+  {
+    id: 'DCT-0008',
+    title: 'Laptop onboarding: reach a GB200 tray BMC',
+    priority: 'P4',
+    location: { rackId: 'R05', u: 'U5', equipmentId: 'ct-r05-01' },
+    issue: 'Before working in the NVL72 rows, prove your technician laptop has out-of-band access and power.',
+    symptoms: ['Laptop is running on battery', 'eth0 is not connected'],
+    objective: 'Get the laptop on AC power and onto the OOB network, then log in to the first GB200 tray BMC.',
+    tasks: ['Plug the laptop adapter into a PDU outlet', 'Patch eth0 into an OOB management switch port', 'Confirm a DHCP lease on the OOB network', 'SSH to dh1-r05-gb200-ct01-bmc with the BMC credential', 'Open its web interface in the laptop browser'],
+    moduleId: 'cabling',
+    difficulty: 'beginner',
+    seeded: true,
+    hint: 'Pick up a Cat6 cable from the cable tray and drop it on the laptop eth0 port, then on a free OOB switch port (U41 in standard racks). The laptop power adapter goes into a C13 outlet on a PDU.',
+    validate: (s) => [
+      { label: 'Laptop on AC power', ok: s.workstation.onAc },
+      { label: 'DHCP lease on the OOB network', ok: s.workstation.effective.source === 'dhcp' && s.workstation.effective.networkId === 'oob' },
+      { label: 'SSH to dh1-r05-gb200-ct01-bmc succeeds', ok: sshConnect(s, 'dh1-r05-gb200-ct01-bmc', 'bmc-admin').ok },
+    ],
+    targetTimeS: 300,
+  },
 ];
 
 export function getWorkOrder(id: string): WorkOrderDef | undefined {
@@ -220,6 +272,10 @@ export function getWorkOrder(id: string): WorkOrderDef | undefined {
 
 /** Resolve `@<portId>` cable references in setup actions against the live state. */
 export function resolveSetup(s: SimulationState, action: SimAction): SimAction | null {
+  if (action.type === 'port/setVlan' && action.portId.startsWith('@peer:')) {
+    const peer = s.ports[action.portId.slice(6)]?.peerPortId;
+    return peer ? { ...action, portId: peer } : null;
+  }
   if (action.type === 'cable/disconnect' && action.cableId.startsWith('@')) {
     const port = s.ports[action.cableId.slice(1)];
     if (!port?.cableId || port.cableEnd === null) return null;

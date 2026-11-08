@@ -195,6 +195,31 @@ export function diffForEvents(prev: SimulationState, next: SimulationState): Eve
     }
   }
 
+  const pw = prev.workstation;
+  const nw = next.workstation;
+  if (pw && nw && pw !== nw) {
+    const laptopId = nw.equipmentId;
+    if (pw.effective.address !== nw.effective.address || pw.effective.source !== nw.effective.source) {
+      const e = nw.effective;
+      const msg =
+        e.source === 'dhcp'
+          ? `DHCP lease ${e.address}/${e.prefix}, gateway ${e.gateway}, DNS ${e.dns}`
+          : e.source === 'apipa'
+            ? `no DHCP answer: self-assigned link-local ${e.address}/16`
+            : e.source === 'static'
+              ? `static address ${e.address}/${e.prefix} active`
+              : 'no IPv4 address';
+      out.push({ severity: e.source === 'apipa' ? 'warning' : 'info', category: 'network', message: `tech-laptop eth0: ${msg}`, equipmentId: laptopId, channels: ['led'] });
+    }
+    if (!pw.conflict && nw.conflict) out.push({ severity: 'warning', category: 'network', message: `tech-laptop: IP address conflict for ${nw.effective.address}`, equipmentId: laptopId, channels: ['led'] });
+    if (pw.poweredOn && !nw.poweredOn) out.push({ severity: 'warning', category: 'power', message: 'tech-laptop: battery empty, laptop shut down', equipmentId: laptopId, channels: ['led'] });
+    if (!pw.onAc && nw.onAc) out.push({ severity: 'info', category: 'power', message: 'tech-laptop: on AC power (charging)', equipmentId: laptopId, channels: ['led'] });
+    if (pw.batteryPct > 15 && nw.batteryPct <= 15 && !nw.onAc) out.push({ severity: 'warning', category: 'power', message: 'tech-laptop: battery low (15 %)', equipmentId: laptopId, channels: ['led'] });
+    if (pw.consoleEquipmentId !== nw.consoleEquipmentId && nw.consoleEquipmentId) {
+      out.push({ severity: 'info', category: 'system', message: `tech-laptop: serial console attached to ${next.equipment[nw.consoleEquipmentId]?.hostname}`, equipmentId: laptopId, channels: ['led'] });
+    }
+  }
+
   const linkChanges: EventDraft[] = [];
   for (const port of Object.values(next.ports)) {
     const p = prev.ports[port.id];

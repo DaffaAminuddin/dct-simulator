@@ -73,6 +73,15 @@
   .hatch {
     background-image: repeating-linear-gradient(135deg, transparent 0 5px, rgba(255, 255, 255, 0.035) 5px 6px);
   }
+  [data-drop='ok'] {
+    outline: 2px solid var(--color-ok) !important;
+    outline-offset: 1px;
+    background-color: color-mix(in srgb, var(--color-ok) 18%, transparent) !important;
+  }
+  [data-drop='bad'] {
+    outline: 2px solid var(--color-crit) !important;
+    outline-offset: 1px;
+  }
   .grille {
     background-image: radial-gradient(rgba(255, 255, 255, 0.09) 0.8px, transparent 1px);
     background-size: 4px 4px;
