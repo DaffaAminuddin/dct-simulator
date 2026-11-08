@@ -54,7 +54,7 @@ export function NetworkLabPage() {
           {switches.map((sw) => {
             const sum = switchPortSummary(s, sw);
             return (
-              <button key={sw.id} type="button" onClick={() => { useUiStore.getState().selectEquipment(sw.id, sw.location.kind === 'rack' ? sw.location.rackId : undefined); useUiStore.getState().setRackSide('rear'); navigate(`/racks/${sw.location.kind === 'rack' ? sw.location.rackId : ''}`); }} className="rounded-[5px] border border-border bg-surface-2 p-2 text-left hover:border-border-strong">
+              <button key={sw.id} type="button" onClick={() => { useUiStore.getState().selectEquipment(sw.id, sw.location.kind === 'rack' ? sw.location.rackId : undefined); useUiStore.getState().setRackSide('rear'); navigate(`/racks/${sw.location.kind === 'rack' ? sw.location.rackId : ''}`); }} className="rounded-chip border border-border bg-surface-2 p-2 text-left hover:border-border-strong">
                 <Mono className="text-fg">{sw.hostname.replace('dh1-', '')}</Mono>
                 <div className="mt-1 flex flex-wrap gap-1">
                   <Badge tone="ok">{sum.up} up</Badge>
@@ -75,7 +75,7 @@ export function NetworkLabPage() {
         actions={
           <>
             <label className="flex items-center gap-1.5 text-[11.5px] text-muted">
-              <input type="checkbox" checked={problemsOnly} onChange={(e) => setProblemsOnly(e.target.checked)} className="accent-[#7cc33f]" /> Problems only
+              <input type="checkbox" checked={problemsOnly} onChange={(e) => setProblemsOnly(e.target.checked)} className="accent-[#4cc38a]" /> Problems only
             </label>
             <Select aria-label="Media filter" value={media} onChange={(e) => setMedia(e.target.value)}>
               <option value="all">All media</option>
@@ -146,7 +146,7 @@ export function NetworkLabPage() {
       <Panel title="IP networks and policy">
         <div className="grid gap-3 md:grid-cols-2">
           {s.facility.networks.map((n) => (
-            <div key={n.id} className="rounded-[5px] border border-border bg-surface-2 p-2.5 text-[12px]">
+            <div key={n.id} className="rounded-chip border border-border bg-surface-2 p-2.5 text-[12px]">
               <div className="mb-1 flex items-center gap-2">
                 <span className="font-medium">{n.name}</span>
                 <Badge>VLAN {n.vlan}</Badge>

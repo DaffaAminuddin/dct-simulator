@@ -13,21 +13,21 @@ function Label({ position, children, tone = 'muted' }: { position: [number, numb
   return <TextSprite text={children} position={position} color={color} border={border} height={0.18} />;
 }
 
-export function Infrastructure({ width, depth, racks, cdu }: { width: number; depth: number; racks: Rack[]; cdu?: { x: number; z: number; ok: boolean } }) {
+export function Infrastructure({ width, depth, racks, cdu, light = false }: { width: number; depth: number; racks: Rack[]; cdu?: { x: number; z: number; ok: boolean }; light?: boolean }) {
   const floor = useMemo(() => {
-    const t = floorTileTexture();
+    const t = floorTileTexture(light);
     t.repeat.set(width / TILE, depth / TILE);
     return t;
-  }, [width, depth]);
+  }, [width, depth, light]);
   const xs = racks.map((r) => r.position.x);
   const minX = Math.min(...xs) - RACK_W / 2 - 0.6;
   const maxX = Math.max(...xs) + RACK_W / 2 + 0.6;
   const aisleLen = maxX - minX;
   const perf = useMemo(() => {
-    const t = perforatedTileTexture();
+    const t = perforatedTileTexture(light);
     t.repeat.set(aisleLen / TILE, 3);
     return t;
-  }, [aisleLen]);
+  }, [aisleLen, light]);
   const cx = (minX + maxX) / 2;
   const rowZ = [...new Set(racks.map((r) => r.position.z))];
 
@@ -41,7 +41,7 @@ export function Infrastructure({ width, depth, racks, cdu }: { width: number; de
       {/* Cold aisle: perforated tiles */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[cx, 0.002, 0]}>
         <planeGeometry args={[aisleLen, 1.8]} />
-        <meshStandardMaterial map={perf} color="#9cc8ff" roughness={0.8} />
+        <meshStandardMaterial map={perf} color={light ? '#dbe3f7' : '#9cc8ff'} roughness={0.8} />
       </mesh>
       {/* Hot aisles: tinted */}
       {rowZ.map((z) => {

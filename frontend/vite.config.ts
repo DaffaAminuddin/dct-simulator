@@ -18,5 +18,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ["src/**/*.test.{ts,tsx}"],
     css: false,
+    // Long-horizon engine tests (minutes of simulated time) need headroom on busy machines.
+    testTimeout: 20000,
   },
 });

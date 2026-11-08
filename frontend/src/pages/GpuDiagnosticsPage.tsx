@@ -129,14 +129,14 @@ function NvlinkMatrix({ s, rackId, devMode }: { s: SimulationState; rackId: stri
         {trays.map((t) => {
           const driverOk = channelStatus(s, t, 'driver').available;
           return (
-            <div key={t.id} className="rounded-[4px] border border-border bg-surface-2 p-1.5">
+            <div key={t.id} className="rounded-chip border border-border bg-surface-2 p-1.5">
               <div className="mb-1 truncate font-mono text-[10.5px] text-muted">{t.hostname.replace(/^dh1-r0\d-/, '')}</div>
               <div className="grid grid-cols-4 gap-1">
                 {gpusOf(s, t).map((g) => {
                   const tel = g.gpu!;
                   const known = driverOk && (tel.lifecycle === 'initialized' || devMode);
                   const ratio = tel.nvlinkTotal ? tel.nvlinkActive / tel.nvlinkTotal : 0;
-                  const color = !known ? 'bg-surface-3 text-subtle' : ratio === 1 ? 'bg-ok/25 text-[#a9e08f]' : ratio > 0 ? 'bg-warn/25 text-[#efc15f]' : 'bg-crit/25 text-[#f08a84]';
+                  const color = !known ? 'bg-surface-3 text-subtle' : ratio === 1 ? 'bg-ok-soft text-ok-ink' : ratio > 0 ? 'bg-warn-soft text-warn-ink' : 'bg-crit-soft text-crit-ink';
                   return (
                     <div key={g.id} title={`GPU ${tel.index}: ${known ? `${tel.nvlinkActive}/${tel.nvlinkTotal}` : 'not visible'}`} className={cn('rounded-[2px] py-0.5 text-center font-mono text-[10px]', color)}>
                       {known ? tel.nvlinkActive : '?'}

@@ -22,6 +22,8 @@ export interface CableInHand {
   freeEnd: 0 | 1 | null;
 }
 
+export type Theme = 'light' | 'dark';
+
 export type LaptopApp = 'home' | 'network' | 'ping' | 'ssh' | 'browser' | 'console';
 
 interface UiStore {
@@ -38,6 +40,7 @@ interface UiStore {
   showCables: boolean;
   laptopOpen: boolean;
   laptopApp: LaptopApp;
+  theme: Theme;
   toasts: Toast[];
   selectRack: (id: Id) => void;
   selectEquipment: (id: Id | null, rackId?: Id) => void;
@@ -52,6 +55,7 @@ interface UiStore {
   setShowCables: (on: boolean) => void;
   setLaptopOpen: (open: boolean) => void;
   openLaptopApp: (app: LaptopApp) => void;
+  setTheme: (t: Theme) => void;
   notify: (t: Omit<Toast, 'id'>) => void;
   dismiss: (id: number) => void;
   clearSelection: () => void;
@@ -75,6 +79,7 @@ export const useUiStore = create<UiStore>()(
       showCables: true,
       laptopOpen: false,
       laptopApp: 'home',
+      theme: 'light',
       toasts: [],
       selectRack: (id) => set((st) => (st.selectedRackId === id ? st : { selectedRackId: id, selectedEquipmentId: null, selectedPortId: null })),
       selectEquipment: (id, rackId) =>
@@ -95,6 +100,7 @@ export const useUiStore = create<UiStore>()(
       setShowCables: (showCables) => set({ showCables }),
       setLaptopOpen: (laptopOpen) => set({ laptopOpen }),
       openLaptopApp: (laptopApp) => set({ laptopApp, laptopOpen: true }),
+      setTheme: (theme) => set({ theme }),
       notify: (t) => {
         const id = ++toastSeq;
         set((st) => ({ toasts: [...st.toasts.slice(-3), { ...t, id }] }));
@@ -105,7 +111,7 @@ export const useUiStore = create<UiStore>()(
     }),
     {
       name: 'dct-sim-ui',
-      partialize: (st) => ({ devMode: st.devMode, trainingMode: st.trainingMode, rackSide: st.rackSide, dataHallView: st.dataHallView, showCables: st.showCables }),
+      partialize: (st) => ({ devMode: st.devMode, trainingMode: st.trainingMode, rackSide: st.rackSide, dataHallView: st.dataHallView, showCables: st.showCables, theme: st.theme }),
     },
   ),
 );

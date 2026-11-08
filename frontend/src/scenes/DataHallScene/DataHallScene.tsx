@@ -14,6 +14,7 @@ interface OrbitControlsImpl {
 import { displayedHealth } from '@/simulation/diagnostics/DiagnosticEngine';
 import { worstHealth } from '@/simulation/core/util';
 import { useSim } from '@/stores/simulationStore';
+import { useUiStore } from '@/stores/uiStore';
 import type { Equipment, Health } from '@/types/simulation';
 import { Infrastructure } from './Infrastructure';
 import { RackModel } from './RackModel';
@@ -105,6 +106,7 @@ export interface DataHallSceneProps {
 
 export default function DataHallScene({ selectedRackId, preset, focusSeq, devMode, onSelect, onOpen }: DataHallSceneProps) {
   const s = useSim((st) => st);
+  const light = useUiStore((st) => st.theme) === 'light';
   const [hovered, setHovered] = useState<string | null>(null);
   const door = useMemo(() => rearDoorTexture(), []);
 
@@ -148,13 +150,13 @@ export default function DataHallScene({ selectedRackId, preset, focusSeq, devMod
 
   return (
     <Canvas frameloop="demand" dpr={[1, 2]} camera={{ position: PRESETS.overview.pos, fov: 45, near: 0.1, far: 80 }} gl={{ antialias: true, powerPreference: 'high-performance' }} onPointerMissed={() => setHovered(null)}>
-      <color attach="background" args={['#0b0d0e']} />
-      <fog attach="fog" args={['#0b0d0e', 16, 34]} />
-      <ambientLight intensity={0.55} />
+      <color attach="background" args={[light ? '#ededef' : '#16151c']} />
+      <fog attach="fog" args={[light ? '#ededef' : '#16151c', 16, 34]} />
+      <ambientLight intensity={light ? 0.9 : 0.55} />
       <hemisphereLight args={['#dfe7ee', '#101315', 0.55]} />
       <directionalLight position={[4, 8, 5]} intensity={1.1} />
       <pointLight position={[-0.2, 3.2, 0]} intensity={6} distance={9} color="#cfe3ff" />
-      <Infrastructure width={s.facility.dimensions.width} depth={s.facility.dimensions.depth} racks={racks} cdu={cdu} />
+      <Infrastructure width={s.facility.dimensions.width} depth={s.facility.dimensions.depth} racks={racks} cdu={cdu} light={light} />
       {racks.map((r) => (
         <RackModel
           key={r.id}

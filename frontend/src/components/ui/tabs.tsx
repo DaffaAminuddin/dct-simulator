@@ -7,6 +7,7 @@ export interface TabItem<T extends string> {
   disabled?: boolean;
 }
 
+/** Pill tabs on a raised track. */
 export function Tabs<T extends string>({
   items,
   value,
@@ -23,7 +24,7 @@ export function Tabs<T extends string>({
   label?: string;
 }) {
   return (
-    <div role="tablist" aria-label={label} className={cn('flex min-w-0 items-center gap-0.5 overflow-x-auto', className)}>
+    <div role="tablist" aria-label={label} className={cn('flex min-w-0 max-w-full items-center gap-1 overflow-x-auto rounded-full bg-surface-2 p-1', className)}>
       {items.map((it) => (
         <button
           key={it.id}
@@ -33,9 +34,9 @@ export function Tabs<T extends string>({
           disabled={it.disabled}
           onClick={() => onChange(it.id)}
           className={cn(
-            'inline-flex shrink-0 items-center gap-1.5 rounded-[4px] border border-transparent font-medium text-muted transition-colors hover:text-fg disabled:opacity-40',
-            size === 'sm' ? 'h-6 px-2 text-[11px]' : 'h-7 px-2.5 text-[12px]',
-            value === it.id && 'border-border-strong bg-surface-3 text-fg',
+            'inline-flex shrink-0 items-center gap-1.5 rounded-full font-medium text-muted transition-colors hover:text-fg disabled:opacity-40',
+            size === 'sm' ? 'h-7 px-3 text-[12px]' : 'h-8 px-4 text-[13px]',
+            value === it.id && 'bg-surface font-semibold text-fg shadow-[0_1px_2px_rgba(22,21,28,0.08)]',
           )}
         >
           {it.label}
@@ -47,7 +48,7 @@ export function Tabs<T extends string>({
 
 export function Segmented<T extends string>({ items, value, onChange, label }: { items: TabItem<T>[]; value: T; onChange: (id: T) => void; label: string }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-[5px] border border-border-strong bg-surface-2 p-0.5">
+    <div role="radiogroup" aria-label={label} className="inline-flex rounded-full bg-surface-2 p-1">
       {items.map((it) => (
         <button
           key={it.id}
@@ -56,8 +57,8 @@ export function Segmented<T extends string>({ items, value, onChange, label }: {
           aria-checked={value === it.id}
           onClick={() => onChange(it.id)}
           className={cn(
-            'inline-flex h-6 items-center gap-1 rounded-[3px] px-2 text-[11px] font-medium text-muted hover:text-fg [&_svg]:size-3.5',
-            value === it.id && 'bg-surface-3 text-fg shadow-[inset_0_0_0_1px_var(--color-border-strong)]',
+            'inline-flex h-8 items-center gap-1.5 rounded-full px-4 text-[13px] font-medium text-muted transition-colors hover:text-fg [&_svg]:size-4',
+            value === it.id && 'bg-surface font-semibold text-fg shadow-[0_1px_2px_rgba(22,21,28,0.08)]',
           )}
         >
           {it.label}

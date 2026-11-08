@@ -54,7 +54,7 @@ export function FacilityPage() {
               value={s.facility.crahSupplyC}
               onChange={(e) => act({ type: 'facility/setCrahSupply', tempC: Number(e.target.value) })}
               aria-label="CRAH supply setpoint"
-              className="w-full accent-[#7cc33f]"
+              className="w-full accent-[#4cc38a]"
             />
             <div className="text-[11.5px] text-muted">Raising the setpoint raises every air-cooled inlet temperature. Watch GPU temperatures in R03.</div>
           </div>
@@ -129,7 +129,7 @@ export function FacilityPage() {
                   const c = s.racks[rid].coolant;
                   if (!c) return null;
                   return (
-                    <div key={rid} className="rounded-[5px] border border-border bg-surface-2 p-2">
+                    <div key={rid} className="rounded-chip border border-border bg-surface-2 p-2">
                       <div className="mb-1 flex items-center gap-2 text-[12px]">
                         <Mono>{rid}</Mono>
                         <Badge tone={c.status === 'normal' ? 'ok' : c.status === 'warning' ? 'warn' : 'crit'}>{c.status}</Badge>
@@ -154,7 +154,7 @@ export function FacilityPage() {
       <Panel title="Air-cooled rack inlets">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
           {Object.values(s.racks).map((r) => (
-            <div key={r.id} className="rounded-[5px] border border-border bg-surface-2 p-2">
+            <div key={r.id} className="rounded-chip border border-border bg-surface-2 p-2">
               <Mono className="text-muted">{r.id}</Mono>
               <div className={`font-mono text-[16px] tabular ${r.inletC > 27 ? 'text-warn' : ''}`}>{formatTemp(r.inletC)}</div>
               <div className="text-[11px] text-subtle">{r.openU} open U</div>

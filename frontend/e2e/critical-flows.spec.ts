@@ -22,11 +22,29 @@ async function freshSession(page: Page) {
 test('every sidebar section renders without errors', async ({ page }) => {
   const errors = watchErrors(page);
   await freshSession(page);
-  const nav = page.getByRole('navigation', { name: 'Main navigation' });
-  for (const label of ['Dashboard', 'Virtual Data Center', 'Rack Explorer', 'Hardware Lab', 'Network Lab', 'GPU Diagnostics', 'Cooling & Power', 'Terminal', 'Work Orders', 'Learning Center', 'Inventory', 'Progress & Achievements', 'Settings']) {
-    await nav.getByRole('link', { name: label }).click();
-    await expect(page.getByRole('heading', { level: 1, name: label })).toBeVisible();
+  // Settings sits in the sidebar's bottom group, outside the main navigation.
+  const sidebar = page.getByRole('complementary', { name: 'Sidebar' });
+  for (const label of ['Virtual Data Center', 'Rack Explorer', 'Hardware Lab', 'Network Lab', 'GPU Diagnostics', 'Cooling & Power', 'Terminal', 'Work Orders', 'Learning Center', 'Inventory', 'Progress & Achievements', 'Settings', 'Dashboard']) {
+    // Link names may carry a phase tag ("Terminal P3"), so match the label as a prefix.
+    await sidebar.getByRole('link', { name: new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`) }).click();
+    // The dashboard greets the learner instead of repeating its label.
+    await expect(page.getByRole('heading', { level: 1, name: label === 'Dashboard' ? /^Hello, / : label })).toBeVisible();
   }
+  expect(errors).toEqual([]);
+});
+
+test('the theme switch restyles the app and survives a reload', async ({ page }) => {
+  const errors = watchErrors(page);
+  await freshSession(page);
+  const html = page.locator('html');
+  await expect(html).toHaveAttribute('data-theme', 'light');
+  await page.getByRole('switch', { name: 'Dark theme' }).click();
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  const bg = await page.evaluate(() => getComputedStyle(document.body).getPropertyValue('--bg-main').trim().toLowerCase());
+  expect(bg).toBe('#16151c');
+  await page.reload();
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  await expect(page.getByRole('switch', { name: 'Dark theme' })).toHaveAttribute('aria-checked', 'true');
   expect(errors).toEqual([]);
 });
 

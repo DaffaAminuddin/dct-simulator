@@ -73,7 +73,7 @@ export function DataCenterPage() {
             onChange={(v) => webgl && setView(v)}
           />
           {effectiveView === '3d' && (
-            <div className="flex flex-wrap gap-1 rounded-[5px] border border-border-strong bg-surface-2/90 p-0.5">
+            <div className="flex flex-wrap gap-1 rounded-chip border border-border-strong bg-surface-2/90 p-0.5">
               {PRESETS.map((p) => (
                 <button key={p.id} type="button" onClick={() => setPreset(p.id)} className={cn('h-6 rounded-[3px] px-2 text-[11px] text-muted hover:text-fg', preset === p.id && 'bg-surface-3 text-fg')}>
                   {p.label}
@@ -124,7 +124,7 @@ export function DataCenterPage() {
                   onClick={() => select(rack.id)}
                   onDoubleClick={() => open(rack.id)}
                   aria-current={rack.id === sel.rack.id}
-                  className={cn('flex w-full items-center gap-2 rounded-[4px] px-2 py-1.5 text-left hover:bg-surface-3', rack.id === sel.rack.id && 'bg-surface-3 shadow-[inset_2px_0_0_var(--color-accent)]')}
+                  className={cn('flex w-full items-center gap-2 rounded-chip px-2 py-1.5 text-left hover:bg-surface-3', rack.id === sel.rack.id && 'bg-surface-3 shadow-[inset_2px_0_0_var(--color-accent)]')}
                 >
                   <StatusDot tone={healthTone(health)} />
                   <span className="font-mono text-[12px]">{rack.id}</span>

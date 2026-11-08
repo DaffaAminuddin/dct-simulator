@@ -2,22 +2,25 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '@/utils/cn';
 
+/** Pill buttons (DESIGN.md §6.3 / §8): filled ink primary, outline, soft and ghost variants. */
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[5px] border text-[12px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border font-medium transition-[background-color,opacity,transform] duration-150 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        default: 'border-border-strong bg-surface-3 text-fg hover:bg-[#262c30]',
-        primary: 'border-accent-dim bg-accent/15 text-accent-strong hover:bg-accent/25',
-        ghost: 'border-transparent bg-transparent text-muted hover:bg-surface-3 hover:text-fg',
-        outline: 'border-border-strong bg-transparent text-fg hover:bg-surface-3',
-        danger: 'border-crit/40 bg-crit/10 text-[#f08a84] hover:bg-crit/20',
+        default: 'border-transparent bg-surface-2 text-fg hover:bg-surface-3',
+        primary: 'border-transparent bg-fg text-bg hover:opacity-90',
+        ghost: 'border-transparent bg-transparent text-muted hover:bg-surface-2 hover:text-fg',
+        outline: 'border-border-strong bg-transparent text-fg hover:bg-fg/[0.06]',
+        danger: 'border-transparent bg-crit-soft text-crit-ink hover:bg-crit/20',
+        accent: 'border-transparent bg-ok-soft text-ok-ink hover:bg-ok/25',
       },
       size: {
-        sm: 'h-7 px-2.5',
-        md: 'h-8 px-3',
-        xs: 'h-6 px-2 text-[11px]',
-        icon: 'size-7',
+        sm: 'h-8 px-4 text-[13px] [&_svg]:size-4',
+        md: 'h-[38px] px-5 text-[14px] [&_svg]:size-4',
+        xs: 'h-7 px-3 text-[12px] [&_svg]:size-3.5',
+        icon: 'size-8 [&_svg]:size-4',
+        'icon-lg': 'size-10 [&_svg]:size-[18px]',
       },
     },
     defaultVariants: { variant: 'default', size: 'sm' },

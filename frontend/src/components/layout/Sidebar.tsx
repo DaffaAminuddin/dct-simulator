@@ -1,82 +1,126 @@
-import { FlaskConical, X } from 'lucide-react';
+/**
+ * Sidebar (DESIGN.md §6.1): logo, profile, text navigation, and a bottom group
+ * with Settings and the Theme toggle. Collapses to an icon rail at
+ * 1024–1279 px and becomes a drawer below 1024 px.
+ */
+import { FlaskConical, Moon, Settings as SettingsIcon, Sun, X } from 'lucide-react';
 import { NavLink } from 'react-router';
-import { Badge } from '@/components/ui/badge';
+import { WORK_ORDERS } from '@/data/workorders/workOrders';
+import { effectiveStatus, skillLevel, useProgressStore } from '@/stores/progressStore';
 import { useUiStore } from '@/stores/uiStore';
 import { cn } from '@/utils/cn';
 import { NAV } from './nav';
 
-const MODE_LABEL = { guided: 'Guided Learning', practice: 'Practice Lab', incident: 'Incident Simulation' } as const;
+const LABEL = 'inline lg:hidden xl:inline';
+
+export function BrandMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 36 36" className={className} aria-hidden>
+      <rect x="9" y="3" width="20" height="26" rx="5" fill="#4cc38a" />
+      <rect x="5" y="7" width="20" height="26" rx="5" fill="var(--text-primary)" />
+      <path d="M10 14h10M10 19h10M10 24h10" stroke="var(--bg-main)" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('') || 'T';
+}
 
 export function Sidebar() {
   const open = useUiStore((s) => s.sidebarOpen);
   const setOpen = useUiStore((s) => s.setSidebarOpen);
   const devMode = useUiStore((s) => s.devMode);
-  const mode = useUiStore((s) => s.trainingMode);
-  const groups = ['Operate', 'Train', 'System'] as const;
+  const theme = useUiStore((s) => s.theme);
+  const setTheme = useUiStore((s) => s.setTheme);
+  const name = useProgressStore((s) => s.learnerName);
+  const modules = useProgressStore((s) => s.modulesCompleted.length);
+  const runs = useProgressStore((s) => s.workOrders);
+  const resolved = WORK_ORDERS.filter((w) => ['resolved', 'closed'].includes(effectiveStatus(runs[w.id]))).length;
+  const skill = skillLevel(modules, resolved);
+  const main = NAV.filter((n) => n.group !== 'System');
+  const dark = theme === 'dark';
+
+  const navClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      'flex h-[43px] items-center gap-3 rounded-full text-[15px] transition-colors lg:justify-center xl:justify-start',
+      isActive ? 'font-semibold text-fg' : 'text-muted hover:text-fg',
+    );
 
   return (
     <>
-      {open && <div className="fixed inset-0 z-30 bg-black/60 lg:hidden" onClick={() => setOpen(false)} aria-hidden />}
+      {open && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setOpen(false)} aria-hidden />}
       <aside
+        aria-label="Sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-border bg-surface transition-transform lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col bg-sidebar px-6 py-7 transition-transform lg:static lg:w-[76px] lg:translate-x-0 lg:px-3 xl:w-60 xl:px-8',
           open ? 'translate-x-0' : '-translate-x-full',
         )}
       >
-        <div className="flex h-12 items-center gap-2.5 border-b border-border px-3">
-          <svg viewBox="0 0 32 32" className="size-7 shrink-0" aria-hidden>
-            <rect width="32" height="32" rx="6" fill="#171b1e" />
-            <g fill="none" stroke="#7cc33f" strokeWidth="2">
-              <rect x="9" y="5" width="14" height="22" rx="1.5" />
-              <path d="M12 10h8M12 14h8M12 18h8" />
-            </g>
-            <circle cx="20" cy="23" r="1.4" fill="#7cc33f" />
-          </svg>
-          <div className="min-w-0 leading-tight">
-            <div className="text-[13px] font-semibold tracking-[0.12em]">DCT SIMULATOR</div>
-            <div className="truncate text-[10.5px] text-subtle">Data Center Technician Virtual Lab</div>
+        <div className="flex items-center gap-2.5 lg:justify-center xl:justify-start">
+          <BrandMark className="size-9 shrink-0" />
+          <div className={cn(LABEL, 'leading-tight')}>
+            <div className="text-[22px] font-bold tracking-tight">DCT Sim</div>
+            <div className="text-[11px] whitespace-nowrap text-muted">Data Center Tech Lab</div>
           </div>
           <button type="button" className="ml-auto text-muted hover:text-fg lg:hidden" aria-label="Close navigation" onClick={() => setOpen(false)}>
-            <X className="size-4" />
+            <X className="size-5" />
           </button>
         </div>
-        <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-2 py-2">
-          {groups.map((g) => (
-            <div key={g} className="mb-2">
-              <div className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-subtle">{g}</div>
-              {NAV.filter((n) => n.group === g).map((n) => (
-                <NavLink
-                  key={n.to}
-                  to={n.to}
-                  end={n.to === '/'}
-                  onClick={() => setOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      'group flex h-8 items-center gap-2.5 rounded-[5px] px-2 text-[12.5px] text-muted hover:bg-surface-3 hover:text-fg',
-                      isActive && 'bg-surface-3 text-fg shadow-[inset_2px_0_0_var(--color-accent)]',
-                    )
-                  }
-                >
-                  <n.icon className="size-4 shrink-0" />
-                  <span className="truncate">{n.label}</span>
-                  {n.phase && (
-                    <Badge tone="muted" className="ml-auto h-4 px-1 text-[10px]">
-                      P{n.phase}
-                    </Badge>
-                  )}
-                </NavLink>
-              ))}
-            </div>
+
+        <div className="mt-7 flex flex-col items-center text-center">
+          <div className="flex size-[72px] items-center justify-center rounded-full bg-avatar text-[24px] font-bold text-[#16151c] lg:size-11 lg:text-[15px] xl:size-[72px] xl:text-[24px]" aria-hidden>
+            {initials(name)}
+          </div>
+          <div className={cn(LABEL, 'mt-3 max-w-full truncate text-[18px] leading-6 font-semibold')}>{name}</div>
+          <div className={cn(LABEL, 'text-[12px] text-muted')}>
+            {skill.title} · DC Technician
+          </div>
+        </div>
+
+        <div className="mx-auto my-6 h-px w-full max-w-40 bg-border" />
+
+        <nav aria-label="Main navigation" className="-mx-2 flex-1 overflow-y-auto px-2">
+          {main.map((n) => (
+            <NavLink key={n.to} to={n.to} end={n.to === '/'} onClick={() => setOpen(false)} className={navClass} title={n.label}>
+              <n.icon className="hidden size-[18px] shrink-0 lg:block xl:hidden" />
+              <span className={cn(LABEL, 'truncate')}>{n.label}</span>
+              {n.phase && <span className={cn(LABEL, 'ml-auto text-[11px] font-medium text-subtle')}>P{n.phase}</span>}
+            </NavLink>
           ))}
         </nav>
-        <div className="space-y-1.5 border-t border-border px-3 py-2.5 text-[11px]">
-          <div className="flex items-center justify-between text-muted">
-            <span>Mode</span>
-            <span className="text-fg">{MODE_LABEL[mode]}</span>
+
+        <div className="mx-auto my-4 h-px w-full max-w-40 bg-border" />
+        <div className="space-y-0.5">
+          <NavLink to="/settings" onClick={() => setOpen(false)} className={navClass} title="Settings">
+            <SettingsIcon className="hidden size-[18px] shrink-0 lg:block xl:hidden" />
+            <span className={LABEL}>Settings</span>
+          </NavLink>
+          <div className="flex h-[43px] items-center gap-3 text-[15px] text-muted lg:justify-center xl:justify-between">
+            <span className={LABEL}>Theme</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={dark}
+              aria-label="Dark theme"
+              title={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+              onClick={() => setTheme(dark ? 'light' : 'dark')}
+              className={cn('relative h-[22px] w-11 shrink-0 rounded-full transition-colors duration-200', dark ? 'bg-fg' : 'bg-border-strong')}
+            >
+              <span className={cn('absolute top-[3px] flex size-4 items-center justify-center rounded-full bg-bg transition-[left] duration-200', dark ? 'left-[25px]' : 'left-[3px]')}>
+                {dark ? <Moon className="size-2.5 text-fg" /> : <Sun className="size-2.5 text-muted" />}
+              </span>
+            </button>
           </div>
           {devMode && (
-            <div className="flex items-center gap-1.5 text-warn">
-              <FlaskConical className="size-3.5" /> Developer mode: ground truth visible
+            <div className="flex items-center gap-1.5 pt-1 text-[12px] text-warn-ink lg:justify-center xl:justify-start" title="Developer mode: ground truth visible">
+              <FlaskConical className="size-4 shrink-0" />
+              <span className={LABEL}>Developer mode</span>
             </div>
           )}
         </div>

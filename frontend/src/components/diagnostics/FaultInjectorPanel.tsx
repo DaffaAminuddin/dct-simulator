@@ -74,12 +74,12 @@ export function FaultInjectorPanel({ equipmentId }: { equipmentId?: Id }) {
               min={1}
               value={params[p.name] ?? p.default}
               onChange={(e) => setParams({ ...params, [p.name]: Number(e.target.value) })}
-              className="h-7 w-20 rounded-[5px] border border-border-strong bg-surface-2 px-2 text-fg"
+              className="h-7 w-20 rounded-chip border border-border-strong bg-surface-2 px-2 text-fg"
             />
           )}
         </label>
       ))}
-      <div className="rounded-[5px] border border-border bg-surface-2 p-2 text-[11.5px] text-muted">
+      <div className="rounded-chip border border-border bg-surface-2 p-2 text-[11.5px] text-muted">
         <div>
           <span className="text-fg">Root cause:</span> {def.rootCause}
         </div>
@@ -94,7 +94,7 @@ export function FaultInjectorPanel({ equipmentId }: { equipmentId?: Id }) {
         ) : (
           <ul className="space-y-1">
             {active.map((f) => (
-              <li key={f.id} className="flex items-center gap-2 rounded-[4px] border border-border bg-surface-2 px-2 py-1 text-[12px]">
+              <li key={f.id} className="flex items-center gap-2 rounded-chip border border-border bg-surface-2 px-2 py-1 text-[12px]">
                 <Badge tone={f.source === 'scenario' ? 'info' : 'warn'}>{f.source}</Badge>
                 <span className="truncate">
                   {FAULT_DEFINITIONS[f.type].name} → {describeTarget(useSimulationStore.getState().state, f.targetId)}

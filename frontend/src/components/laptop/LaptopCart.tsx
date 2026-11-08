@@ -26,7 +26,7 @@ export function LaptopCart({ rackId, side, selectedPortId, onSelectPort }: { rac
 
   if (!here) {
     return (
-      <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed border-border-strong px-3 py-2 text-[12px] text-muted">
+      <div className="flex flex-wrap items-center gap-2 rounded-box border border-dashed border-border-strong px-3 py-2 text-[12px] text-muted">
         <Laptop className="size-4" />
         Crash cart is at {loc.kind === 'cart' ? `${loc.rackId} (${loc.side === 'front' ? 'cold aisle' : 'hot aisle'})` : 'an unknown location'}.
         <Button size="xs" variant="outline" className="ml-auto" onClick={() => act({ type: 'workstation/move', rackId, side }, `Cart moved to ${rackId}`)}>
@@ -40,7 +40,7 @@ export function LaptopCart({ rackId, side, selectedPortId, onSelectPort }: { rac
   const ports = eq.portIds.map((id) => s.ports[id]);
   const H = 22;
   return (
-    <div className="space-y-1.5 rounded-md border border-border bg-surface-2 p-2" data-testid="laptop-cart">
+    <div className="space-y-1.5 rounded-box border border-border bg-surface-2 p-2" data-testid="laptop-cart">
       <div className="flex flex-wrap items-center gap-2 text-[12px]">
         <Laptop className="size-4 text-accent" />
         <span className="font-medium">Crash cart · {eq.hostname}</span>

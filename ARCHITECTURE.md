@@ -190,6 +190,25 @@ events are tagged `devOnly` so that root causes stay hidden outside developer mo
 - `components/laptop/*` holds the laptop window (top-bar button) and its apps. Every probe is a
   pure read of the latest snapshot.
 
+### Visual design system (`DESIGN.md`)
+
+- Tokens live in `src/index.css`: CSS variables in `:root` (light) with a `[data-theme='dark']`
+  override, mapped to Tailwind utilities by `@theme inline` (`bg-canvas`, `bg-sidebar`, `bg-bg`,
+  `bg-surface-2`, `text-fg`, `text-muted`, `bg-hero`, pastel `ok/warn/info/crit` soft and ink
+  pairs, radii `rounded-panel/box/card/chip`). Components use tokens, not raw hex, except the
+  fixed pastel stat cards that keep the same colour in both themes.
+- `uiStore.theme` is persisted. `App` writes it to `<html data-theme>` and an inline script in
+  `index.html` applies it before first paint. The sidebar holds the theme switch.
+- Shell: canvas, then a rounded frame with sidebar and main panel. The sidebar becomes a 76 px
+  icon rail at `lg` and a drawer below it. The header has a greeting, mode select, sim clock and
+  40 px icon buttons (search, alerts, laptop, settings).
+- Dashboard charts (`components/dashboard/charts.tsx`) are dependency-free SVG. They read the
+  `telemetryStore` ring buffer, which samples the engine every 5 s of simulated time.
+- Hardware faces (rack elevation, chassis, equipment fronts) stay dark in both themes, as real
+  equipment is black metal. The 3D hall and the 2D plan follow the theme.
+- `scripts/ui-shots.mjs` captures every page in both themes at chosen widths (dev helper,
+  needs the dev server).
+
 ### 3D performance
 
 - `frameloop="demand"`: the canvas re-renders only when the snapshot, the camera or a hover

@@ -10,7 +10,7 @@ const ACCURACY: Record<Accuracy, { label: string; tone: 'ok' | 'info' | 'warn' |
   industry: { label: 'Industry practice', tone: 'info', desc: 'General industry practice or standard behaviour' },
   simplified: { label: 'Simplified model', tone: 'warn', desc: 'Simplified simulation behaviour for teaching' },
   hypothetical: { label: 'Training scenario', tone: 'muted', desc: 'Hypothetical training content' },
-  reference: { label: 'Reference model', tone: 'accent', desc: 'Generic educational reference design, not an OEM layout' },
+  reference: { label: 'Reference model', tone: 'info', desc: 'Generic educational reference design, not an OEM layout' },
 };
 
 export function AccuracyBadge({ accuracy, note }: { accuracy: Accuracy; note?: string }) {
@@ -22,20 +22,22 @@ export function AccuracyBadge({ accuracy, note }: { accuracy: Accuracy; note?: s
   );
 }
 
+const CALLOUT: Record<'info' | 'warn' | 'crit' | 'ok', { box: string; icon: string }> = {
+  info: { box: 'bg-info-soft', icon: 'text-info-ink' },
+  warn: { box: 'bg-warn-soft', icon: 'text-warn-ink' },
+  crit: { box: 'bg-crit-soft', icon: 'text-crit-ink' },
+  ok: { box: 'bg-ok-soft', icon: 'text-ok-ink' },
+};
+
 export function Callout({ tone = 'info', title, children, className }: { tone?: 'info' | 'warn' | 'crit' | 'ok'; title?: ReactNode; children?: ReactNode; className?: string }) {
   const Icon = tone === 'crit' ? CircleAlert : tone === 'warn' ? TriangleAlert : tone === 'ok' ? CircleCheck : Info;
-  const color = {
-    info: 'border-info/25 bg-info/5 text-info',
-    warn: 'border-warn/25 bg-warn/5 text-warn',
-    crit: 'border-crit/30 bg-crit/5 text-crit',
-    ok: 'border-ok/25 bg-ok/5 text-ok',
-  }[tone];
+  const c = CALLOUT[tone];
   return (
-    <div className={cn('flex gap-2 rounded-md border px-3 py-2 text-[12px]', color, className)}>
-      <Icon className="mt-px size-3.5 shrink-0" />
+    <div className={cn('flex gap-2.5 rounded-chip px-4 py-3 text-[13px]', c.box, className)}>
+      <Icon className={cn('mt-0.5 size-4 shrink-0', c.icon)} />
       <div className="min-w-0">
-        {title && <div className="font-medium text-fg">{title}</div>}
-        {children && <div className="text-muted">{children}</div>}
+        {title && <div className="font-semibold text-fg">{title}</div>}
+        {children && <div className="text-fg/75">{children}</div>}
       </div>
     </div>
   );
@@ -43,12 +45,12 @@ export function Callout({ tone = 'info', title, children, className }: { tone?: 
 
 export function PhaseNotice({ phase, title, children }: { phase: number; title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-md border border-dashed border-border-strong bg-surface-2/50 px-4 py-3">
+    <div className="rounded-box border border-dashed border-border-strong px-5 py-4">
       <div className="flex items-center gap-2">
         <Badge tone="muted">Phase {phase}</Badge>
-        <span className="text-[12.5px] font-medium">{title}</span>
+        <span className="text-[14px] font-semibold">{title}</span>
       </div>
-      {children && <div className="mt-1.5 text-[12px] text-muted">{children}</div>}
+      {children && <div className="mt-1.5 text-[13px] text-muted">{children}</div>}
     </div>
   );
 }
@@ -57,19 +59,19 @@ export function Toaster() {
   const toasts = useUiStore((s) => s.toasts);
   const dismiss = useUiStore((s) => s.dismiss);
   return (
-    <div aria-live="polite" className="pointer-events-none fixed right-3 bottom-3 z-50 flex w-[min(380px,calc(100vw-24px))] flex-col gap-2">
+    <div aria-live="polite" className="pointer-events-none fixed right-4 bottom-4 z-50 flex w-[min(380px,calc(100vw-32px))] flex-col gap-2">
       {toasts.map((t) => {
         const Icon = t.tone === 'crit' ? CircleAlert : t.tone === 'warn' ? TriangleAlert : t.tone === 'ok' ? CircleCheck : Info;
-        const color = { crit: 'text-crit', warn: 'text-warn', ok: 'text-ok', info: 'text-info' }[t.tone];
+        const color = { crit: 'text-crit-ink', warn: 'text-warn-ink', ok: 'text-ok-ink', info: 'text-info-ink' }[t.tone];
         return (
-          <div key={t.id} role="status" className="pointer-events-auto flex gap-2 rounded-md border border-border-strong bg-surface-2 px-3 py-2 shadow-lg shadow-black/40">
+          <div key={t.id} role="status" className="pointer-events-auto flex gap-2.5 rounded-card border border-border bg-surface px-4 py-3 shadow-[0_12px_32px_rgba(22,21,28,0.14)]">
             <Icon className={cn('mt-0.5 size-4 shrink-0', color)} />
             <div className="min-w-0 flex-1">
-              <div className="text-[12px] font-medium">{t.title}</div>
-              {t.detail && <div className="text-[12px] text-muted">{t.detail}</div>}
+              <div className="text-[13px] font-semibold">{t.title}</div>
+              {t.detail && <div className="text-[13px] text-muted">{t.detail}</div>}
             </div>
             <button type="button" aria-label="Dismiss notification" onClick={() => dismiss(t.id)} className="text-subtle hover:text-fg">
-              <X className="size-3.5" />
+              <X className="size-4" />
             </button>
           </div>
         );
@@ -79,5 +81,5 @@ export function Toaster() {
 }
 
 export function Mono({ children, className }: { children: ReactNode; className?: string }) {
-  return <span className={cn('font-mono text-[11.5px] tabular', className)}>{children}</span>;
+  return <span className={cn('font-mono text-[12px] tabular', className)}>{children}</span>;
 }

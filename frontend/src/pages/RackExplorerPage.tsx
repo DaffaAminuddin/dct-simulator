@@ -116,7 +116,7 @@ export function RackExplorerPage() {
             </span>
             {devMode && <span className="text-warn">Developer colours: ports show exact link state</span>}
             <label className="ml-auto flex items-center gap-1.5">
-              <input type="checkbox" checked={showCables} onChange={(e) => setShowCables(e.target.checked)} className="accent-[#7cc33f]" /> Show cables
+              <input type="checkbox" checked={showCables} onChange={(e) => setShowCables(e.target.checked)} className="accent-[#4cc38a]" /> Show cables
             </label>
           </div>
           <div className="max-h-[calc(100vh-190px)] overflow-y-auto pr-1">

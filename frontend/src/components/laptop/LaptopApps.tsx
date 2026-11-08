@@ -24,7 +24,7 @@ import { BmcWebUi } from './BmcWebUi';
 
 function Output({ lines, ok }: { lines: string[]; ok?: boolean }) {
   return (
-    <pre className={cn('max-h-[320px] overflow-auto rounded-[4px] border border-border bg-black/60 p-2.5 font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap', ok === false ? 'text-[#f0b3ae]' : 'text-[#c7d2cc]')} data-testid="laptop-output">
+    <pre className={cn('max-h-[320px] overflow-auto rounded-chip bg-[#16151c] p-3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap', ok === false ? 'text-[#f6a6a2]' : 'text-[#d7dbe0]')} data-testid="laptop-output">
       {lines.join('\n')}
     </pre>
   );
@@ -69,8 +69,8 @@ export function NetworkApp() {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-[5px] border border-border bg-surface-2 p-2.5">
-        <div className="mb-1.5 flex items-center gap-2">
+      <div className="rounded-card bg-surface-2 p-4">
+        <div className="mb-2 flex items-center gap-2">
           <Network className="size-4 text-muted" />
           <span className="font-medium">eth0</span>
           {eth && <Badge tone={portTone(eth.state)}>{PORT_STATE_TEXT[eth.state]}</Badge>}
@@ -91,16 +91,16 @@ export function NetworkApp() {
         {ws.conflict && <Callout tone="crit" className="mt-2">IP address conflict: another device already uses {eff.address}.</Callout>}
       </div>
 
-      <form onSubmit={apply} className="space-y-2 rounded-[5px] border border-border p-2.5" aria-label="IPv4 settings">
+      <form onSubmit={apply} className="space-y-3 rounded-card border border-border p-4" aria-label="IPv4 settings">
         <div className="flex items-center gap-3 text-[12px]">
           <label className="flex items-center gap-1.5">
-            <input type="radio" name="mode" checked={form.mode === 'dhcp'} onChange={() => setForm({ ...form, mode: 'dhcp' })} className="accent-[#7cc33f]" /> Automatic (DHCP)
+            <input type="radio" name="mode" checked={form.mode === 'dhcp'} onChange={() => setForm({ ...form, mode: 'dhcp' })} className="accent-[#4cc38a]" /> Automatic (DHCP)
           </label>
           <label className="flex items-center gap-1.5">
-            <input type="radio" name="mode" checked={form.mode === 'static'} onChange={() => setForm({ ...form, mode: 'static' })} className="accent-[#7cc33f]" /> Manual
+            <input type="radio" name="mode" checked={form.mode === 'static'} onChange={() => setForm({ ...form, mode: 'static' })} className="accent-[#4cc38a]" /> Manual
           </label>
           <label className="ml-auto flex items-center gap-1.5">
-            <input type="checkbox" checked={form.adminUp} onChange={(e) => setForm({ ...form, adminUp: e.target.checked })} className="accent-[#7cc33f]" /> Interface up
+            <input type="checkbox" checked={form.adminUp} onChange={(e) => setForm({ ...form, adminUp: e.target.checked })} className="accent-[#4cc38a]" /> Interface up
           </label>
         </div>
         <div className={cn('grid grid-cols-2 gap-2 text-[12px]', form.mode === 'dhcp' && 'opacity-50')}>
@@ -238,7 +238,7 @@ export function BrowserApp() {
         (result.ok && result.endpoint ? (
           <BmcWebUi equipmentId={result.endpoint.equipmentId} address={result.endpoint.ip} onRefresh={() => go()} />
         ) : (
-          <div className="rounded-[5px] border border-border bg-surface-2 p-6 text-center">
+          <div className="rounded-card bg-surface-2 p-6 text-center">
             <CircleAlert className="mx-auto mb-2 size-6 text-subtle" />
             <div className="text-[13px] font-medium">This site can't be reached</div>
             <Mono className="text-muted">{result.lines[0]}</Mono>
@@ -273,7 +273,7 @@ export function ConsoleApp() {
           {screen.status}
         </Badge>
       </div>
-      <pre className="h-[340px] overflow-auto rounded-[4px] border border-border bg-black p-2.5 font-mono text-[11.5px] leading-relaxed text-[#b8f0a8]" data-testid="serial-console">
+      <pre className="h-[340px] overflow-auto rounded-chip bg-[#16151c] p-3 font-mono text-[12px] leading-relaxed text-[#9be6b9]" data-testid="serial-console">
         {screen.lines.length ? screen.lines.join('\n') : `(${screen.status.toLowerCase()})`}
       </pre>
     </div>

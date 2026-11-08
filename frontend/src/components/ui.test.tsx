@@ -7,6 +7,7 @@ import { EquipmentDetails } from '@/components/server/EquipmentDetails';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { WorkOrdersPage } from '@/pages/WorkOrdersPage';
 import { engine, useSimulationStore } from '@/stores/simulationStore';
+import { useProgressStore } from '@/stores/progressStore';
 import { useUiStore } from '@/stores/uiStore';
 import { AppRoutes } from '@/App';
 
@@ -79,9 +80,40 @@ describe('Dashboard', () => {
         <DashboardPage />
       </MemoryRouter>,
     );
-    expect(screen.getByText('Hardware health overview')).toBeInTheDocument();
-    expect(screen.getByText('PSU 2: AC input lost')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Facility Record' })).toBeInTheDocument();
     expect(screen.getByText('87/88')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Feed' }), { target: { value: 'alerts' } });
+    expect(screen.getByRole('heading', { name: 'Active Alerts' })).toBeInTheDocument();
+    expect(screen.getByText('PSU 2: AC input lost')).toBeInTheDocument();
+  });
+
+  it('scopes the facility record to one rack', () => {
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByRole('combobox', { name: 'Scope' }), { target: { value: 'R01' } });
+    expect(screen.getByText('10/10')).toBeInTheDocument();
+  });
+});
+
+describe('Theme and profile', () => {
+  it('toggles the dark theme from the sidebar and renames the learner', () => {
+    useUiStore.setState({ theme: 'light' });
+    render(
+      <MemoryRouter initialEntries={['/settings']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole('switch', { name: 'Dark theme' }));
+    expect(useUiStore.getState().theme).toBe('dark');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Display name' }), { target: { value: 'Daffa' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save name' }));
+    expect(useProgressStore.getState().learnerName).toBe('Daffa');
+    expect(screen.getAllByText('Daffa').length).toBeGreaterThan(0);
+    useProgressStore.getState().setLearnerName('Technician');
+    useUiStore.setState({ theme: 'light' });
   });
 });
 
@@ -109,7 +141,7 @@ describe('Routing', () => {
           <AppRoutes />
         </MemoryRouter>,
       );
-      expect(screen.getAllByText(/DCT SIMULATOR/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText('DCT Sim').length).toBeGreaterThan(0);
       unmount();
     }
   });

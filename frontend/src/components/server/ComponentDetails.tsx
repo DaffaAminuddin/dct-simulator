@@ -52,7 +52,7 @@ export function ComponentDetails({ s, eq, slotId, devMode }: { s: SimulationStat
               {spares.map((id) => {
                 const c = s.components[id];
                 return (
-                  <li key={id} className="flex items-center gap-2 rounded-[4px] border border-border bg-surface-2 px-2 py-1 text-[12px]">
+                  <li key={id} className="flex items-center gap-2 rounded-chip border border-border bg-surface-2 px-2 py-1 text-[12px]">
                     <span className="min-w-0 flex-1 truncate">
                       {getComponentModel(c.modelId).name} <Mono className="text-subtle">{c.serial}</Mono>
                     </span>
@@ -116,7 +116,7 @@ export function ComponentDetails({ s, eq, slotId, devMode }: { s: SimulationStat
           </ul>
         )}
         {comp.category === 'gpu' && !devMode && <Callout tone="info">GPU-level telemetry (utilization, ECC, XID, NVLink) comes from the driver: see GPU Diagnostics.</Callout>}
-        <div className="rounded-[5px] border border-border bg-surface-2 p-2">
+        <div className="rounded-chip border border-border bg-surface-2 p-2">
           <div className="mb-1 text-[11px] text-subtle">Specifications</div>
           <KV rows={Object.entries(m.specs).map(([k, v]) => [specLabel(k), String(v)])} />
           {m.note && <p className="mt-2 text-[11px] text-subtle">{m.note}</p>}

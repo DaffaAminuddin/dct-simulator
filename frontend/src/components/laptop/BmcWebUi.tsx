@@ -24,7 +24,7 @@ export function BmcWebUi({ equipmentId, address, onRefresh }: { equipmentId: str
   const bmcUp = channelStatus(s, eq, 'bmc').available || eq.bmcAlive;
   if (!eq.bmcAlive) {
     return (
-      <div className="rounded-[5px] border border-border bg-surface-2 p-6 text-center text-[12px] text-muted">
+      <div className="rounded-card bg-surface-2 p-6 text-center text-[13px] text-muted">
         The BMC at {address} stopped responding. <Button size="xs" variant="outline" onClick={onRefresh}>Reload</Button>
       </div>
     );
@@ -39,11 +39,11 @@ export function BmcWebUi({ equipmentId, address, onRefresh }: { equipmentId: str
   const on = isMainPowerOn(eq);
 
   return (
-    <div className="overflow-hidden rounded-[5px] border border-[#2c3a4a] bg-[#0f141a]" data-testid="bmc-web-ui">
-      <div className="flex items-center gap-2 border-b border-[#2c3a4a] bg-[#152030] px-3 py-2">
-        <span className="text-[12.5px] font-semibold text-[#cfe1f5]">{eq.hostname}</span>
-        <span className="text-[11px] text-[#7d93ab]">Baseboard Management Controller · Redfish (simulated)</span>
-        <Button size="icon" variant="ghost" className="ml-auto size-6" aria-label="Refresh BMC page" onClick={onRefresh}>
+    <div className="overflow-hidden rounded-card border border-border bg-surface" data-testid="bmc-web-ui">
+      <div className="flex items-center gap-2 bg-info-soft px-4 py-2.5">
+        <span className="text-[14px] font-semibold text-info-ink">{eq.hostname}</span>
+        <span className="truncate text-[12px] text-info-ink/80">Baseboard Management Controller · Redfish (simulated)</span>
+        <Button size="icon" variant="ghost" className="ml-auto" aria-label="Refresh BMC page" onClick={onRefresh}>
           <RefreshCw />
         </Button>
       </div>

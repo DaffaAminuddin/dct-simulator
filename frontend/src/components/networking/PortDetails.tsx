@@ -157,7 +157,7 @@ export function PortDetails({ portId, onClose, onJump }: { portId: Id; onClose: 
         />
 
         {cable && cableModel ? (
-          <div className="space-y-2 rounded-[5px] border border-border bg-surface-2 p-2.5">
+          <div className="space-y-2 rounded-chip border border-border bg-surface-2 p-2.5">
             <div className="flex items-center gap-2 text-[12px]">
               <span className="size-2.5 rounded-sm" style={{ background: cableModel.color }} />
               <span className="font-medium">{cableModel.name}</span>

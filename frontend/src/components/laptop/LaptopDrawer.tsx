@@ -36,7 +36,7 @@ function Tray() {
   const Battery = ws.onAc ? BatteryCharging : ws.batteryPct < 20 ? BatteryLow : BatteryMedium;
   const linkUp = eth?.state === 'link_up';
   return (
-    <div className="flex items-center gap-3 text-[11px] text-muted" aria-label="Laptop status">
+    <div className="flex items-center gap-3 text-[12px] text-muted" aria-label="Laptop status">
       <span className="flex items-center gap-1.5" title={linkUp ? 'eth0 link up' : 'eth0: no link'}>
         <StatusDot tone={linkUp ? (ws.effective.source === 'apipa' ? 'warn' : 'ok') : 'muted'} />
         <Mono>{linkUp ? ws.effective.address || 'no address' : 'eth0 down'}</Mono>
@@ -65,43 +65,43 @@ export function LaptopDrawer() {
     <aside
       role="dialog"
       aria-label="Technician laptop"
-      className="fixed top-12 right-0 bottom-0 z-40 flex w-[min(720px,100vw)] flex-col border-l border-border-strong bg-[#0a0d0f] shadow-2xl shadow-black/60"
+      className="fixed top-3 right-3 bottom-3 z-40 flex w-[min(720px,calc(100vw-24px))] flex-col overflow-hidden rounded-box border border-border bg-surface shadow-[0_24px_60px_rgba(22,21,28,0.18)]"
     >
-      <header className="flex h-9 shrink-0 items-center gap-2 border-b border-border bg-surface px-3">
-        <span className="text-[12px] font-semibold">tech-laptop</span>
-        <span className="truncate text-[11px] text-subtle">
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-5">
+        <span className="text-[15px] font-semibold">tech-laptop</span>
+        <span className="truncate text-[12px] text-muted">
           Technician image (simulated) · cart at {cart?.kind === 'cart' ? `${cart.rackId} ${cart.side === 'front' ? 'cold aisle' : 'hot aisle'}` : '—'}
         </span>
-        <Button size="icon" variant="ghost" className="ml-auto size-6" aria-label="Close laptop" onClick={() => setOpen(false)}>
+        <Button size="icon" variant="ghost" className="ml-auto" aria-label="Close laptop" onClick={() => setOpen(false)}>
           <X />
         </Button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_30%_20%,#13201a_0%,#0a0d0f_60%)] p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-surface-2 p-5">
         {!poweredOn ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-[12px] text-muted">
             <BatteryLow className="size-8 text-warn" />
             The laptop battery is empty. Plug the laptop power adapter (C14 → USB-C) into a live PDU outlet to power it on.
           </div>
         ) : current ? (
-          <div className="rounded-md border border-border bg-surface/95">
-            <div className="flex items-center gap-2 border-b border-border px-3 py-1.5">
-              <Button size="icon" variant="ghost" className="size-6" aria-label="Back to desktop" onClick={() => openApp('home')}>
+          <div className="rounded-box border border-border bg-surface">
+            <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+              <Button size="icon" variant="ghost" aria-label="Back to desktop" onClick={() => openApp('home')}>
                 <ArrowLeft />
               </Button>
-              <current.icon className="size-4 text-accent" />
-              <span className="text-[12.5px] font-medium">{current.label}</span>
+              <current.icon className="size-4 text-ok-ink" />
+              <span className="text-[15px] font-semibold">{current.label}</span>
             </div>
-            <div className="p-3">
+            <div className="p-4">
               <current.component />
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {APPS.map((a) => (
-              <button key={a.id} type="button" onClick={() => openApp(a.id)} className="flex flex-col items-center gap-1.5 rounded-md p-3 text-[11.5px] text-fg/90 hover:bg-white/5">
-                <span className="flex size-11 items-center justify-center rounded-lg border border-border-strong bg-surface-3">
-                  <a.icon className="size-5 text-accent" />
+              <button key={a.id} type="button" onClick={() => openApp(a.id)} className="flex flex-col items-center gap-2 rounded-card p-3 text-[13px] font-medium text-fg hover:bg-surface">
+                <span className="flex size-12 items-center justify-center rounded-chip bg-ok-soft">
+                  <a.icon className="size-5 text-ok-ink" />
                 </span>
                 {a.label}
               </button>
@@ -114,10 +114,10 @@ export function LaptopDrawer() {
                   setOpen(false);
                   navigate(sc.to);
                 }}
-                className="flex flex-col items-center gap-1.5 rounded-md p-3 text-[11.5px] text-fg/90 hover:bg-white/5"
+                className="flex flex-col items-center gap-2 rounded-card p-3 text-[13px] font-medium text-fg hover:bg-surface"
               >
-                <span className="flex size-11 items-center justify-center rounded-lg border border-border-strong bg-surface-3">
-                  <sc.icon className="size-5 text-info" />
+                <span className="flex size-12 items-center justify-center rounded-chip bg-info-soft">
+                  <sc.icon className="size-5 text-info-ink" />
                 </span>
                 {sc.label}
               </button>
@@ -126,7 +126,7 @@ export function LaptopDrawer() {
         )}
       </div>
 
-      <footer className="flex h-10 shrink-0 items-center gap-1 border-t border-border bg-surface px-2">
+      <footer className="flex h-12 shrink-0 items-center gap-1 border-t border-border px-3">
         {APPS.map((a) => (
           <button
             key={a.id}
@@ -134,7 +134,7 @@ export function LaptopDrawer() {
             aria-label={`Open ${a.label}`}
             title={a.label}
             onClick={() => openApp(a.id)}
-            className={cn('flex size-7 items-center justify-center rounded-[4px] text-muted hover:bg-surface-3 hover:text-fg', app === a.id && 'bg-surface-3 text-accent')}
+            className={cn('flex size-8 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-fg', app === a.id && 'bg-ok-soft text-ok-ink')}
           >
             <a.icon className="size-4" />
           </button>

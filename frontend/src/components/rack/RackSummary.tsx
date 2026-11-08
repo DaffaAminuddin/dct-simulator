@@ -154,7 +154,7 @@ export function RackSummary({ rackId, preselectU }: { rackId: Id; preselectU?: n
                       ev.dataTransfer.effectAllowed = 'move';
                     }}
                     onDragEnd={() => setDrag(null)}
-                    className="cursor-grab rounded-[4px] border border-border-strong bg-surface-3 px-2 py-1 font-mono text-[11px] active:cursor-grabbing"
+                    className="cursor-grab rounded-chip border border-border-strong bg-surface-3 px-2 py-1 font-mono text-[11px] active:cursor-grabbing"
                     title="Drag onto a free U in the elevation"
                   >
                     ⠿ {e.hostname} ({getEquipmentModel(e.modelId).heightU}U)

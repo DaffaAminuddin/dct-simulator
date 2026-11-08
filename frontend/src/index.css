@@ -1,30 +1,139 @@
+@import '@fontsource-variable/inter';
 @import 'tailwindcss';
 
+/*
+ * Design tokens from DESIGN.md (light base, dark via [data-theme='dark']).
+ * Utilities reference the CSS variables, so every component follows the theme.
+ */
+:root {
+  /* Surfaces */
+  --bg-app: #ededef;
+  --bg-sidebar: #f5f4f6;
+  --bg-main: #ffffff;
+  --surface: #ffffff;
+  --surface-raised: #f7f7f9;
+  --surface-hover: #efeff3;
+  --border: #ececf0;
+  --border-strong: #dcdce2;
+
+  /* Text */
+  --text-primary: #16151c;
+  --text-secondary: #76757f;
+  --text-subtle: #a3a2ab;
+
+  /* Hero (inverse) */
+  --hero-bg: #16151c;
+  --hero-text: #ffffff;
+
+  /* Data accents (DESIGN.md §3.3) */
+  --income: #4cc38a;
+  --income-bg: #e7fbec;
+  --income-ink: #15805a;
+  --expense: #ee9f7e;
+  --expense-bg: #fdebe2;
+  --expense-ink: #b4562e;
+  --saving: #9aaae0;
+  --saving-bg: #e8edfa;
+  --saving-ink: #4a5da8;
+  --danger: #e5484d;
+  --danger-bg: #fde7e7;
+  --danger-ink: #c2303a;
+  --card-teal: #e5f4f2;
+  --trend-up: #22b07d;
+  --avatar: #f4a3a3;
+
+  /* Chart */
+  --chart-main: #16151c;
+  --chart-grid: #ececf0;
+
+  /* Hardware visualisation canvas (racks are black metal in both themes) */
+  --hw-canvas: #16151c;
+}
+
+[data-theme='dark'] {
+  --bg-sidebar: #1e1e24;
+  --bg-main: #16151c;
+  --surface: #16151c;
+  --surface-raised: #24232b;
+  --surface-hover: #2c2b34;
+  --border: #34333c;
+  --border-strong: #44434d;
+
+  --text-primary: #ffffff;
+  --text-secondary: #9a99a3;
+  --text-subtle: #6e6d77;
+
+  --hero-bg: #ffffff;
+  --hero-text: #16151c;
+
+  --income-bg: color-mix(in srgb, #4cc38a 16%, transparent);
+  --income-ink: #74d8a7;
+  --expense-bg: color-mix(in srgb, #ee9f7e 18%, transparent);
+  --expense-ink: #f3b597;
+  --saving-bg: color-mix(in srgb, #9aaae0 18%, transparent);
+  --saving-ink: #b9c5ef;
+  --danger-bg: color-mix(in srgb, #e5484d 18%, transparent);
+  --danger-ink: #f69a9d;
+  --card-teal: color-mix(in srgb, #5fc7b8 16%, transparent);
+
+  --chart-main: #ffffff;
+  --chart-grid: #34333c;
+}
+
+@theme inline {
+  --color-canvas: var(--bg-app);
+  --color-sidebar: var(--bg-sidebar);
+  --color-bg: var(--bg-main);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-raised);
+  --color-surface-3: var(--surface-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--text-primary);
+  --color-muted: var(--text-secondary);
+  --color-subtle: var(--text-subtle);
+  --color-hero: var(--hero-bg);
+  --color-hero-fg: var(--hero-text);
+
+  --color-accent: var(--income);
+  --color-accent-strong: var(--income-ink);
+  --color-accent-dim: var(--income-bg);
+
+  --color-ok: var(--income);
+  --color-ok-soft: var(--income-bg);
+  --color-ok-ink: var(--income-ink);
+  --color-warn: var(--expense);
+  --color-warn-soft: var(--expense-bg);
+  --color-warn-ink: var(--expense-ink);
+  --color-info: var(--saving);
+  --color-info-soft: var(--saving-bg);
+  --color-info-ink: var(--saving-ink);
+  --color-crit: var(--danger);
+  --color-crit-soft: var(--danger-bg);
+  --color-crit-ink: var(--danger-ink);
+  --color-teal-card: var(--card-teal);
+  --color-trend: var(--trend-up);
+  --color-avatar: var(--avatar);
+  --color-chart: var(--chart-main);
+  --color-grid: var(--chart-grid);
+  --color-hw: var(--hw-canvas);
+}
+
 @theme {
-  --color-bg: #0b0d0e;
-  --color-surface: #111416;
-  --color-surface-2: #171b1e;
-  --color-surface-3: #1e2326;
-  --color-border: #252b2f;
-  --color-border-strong: #353c41;
-  --color-fg: #e3e6e8;
-  --color-muted: #8d969c;
-  --color-subtle: #5f686e;
-  --color-accent: #7cc33f;
-  --color-accent-strong: #93d65a;
-  --color-accent-dim: #3f6620;
-  --color-ok: #67bd45;
-  --color-warn: #e2a72e;
-  --color-crit: #e5534b;
-  --color-info: #4ea3e0;
-  --color-unknown: #6b7480;
+  --color-unknown: #8e8d96;
   --color-uid: #3b82f6;
   --color-copper: #c27c3a;
   --color-coolant-cold: #3b82f6;
   --color-coolant-hot: #ef4444;
 
-  --font-sans: ui-sans-serif, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Cascadia Mono', 'SF Mono', ui-monospace, Consolas, monospace;
+
+  /* Radius scale (DESIGN.md §5) */
+  --radius-panel: 40px;
+  --radius-box: 24px;
+  --radius-card: 20px;
+  --radius-chip: 12px;
 
   --animate-blink: blink 1.2s steps(1, end) infinite;
   @keyframes blink {
@@ -45,24 +154,41 @@
   #root {
     height: 100%;
   }
-  body {
-    background: var(--color-bg);
-    color: var(--color-fg);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    -webkit-font-smoothing: antialiased;
+  html {
+    color-scheme: light;
+  }
+  html[data-theme='dark'] {
     color-scheme: dark;
+  }
+  body {
+    background: var(--bg-app);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
+    -webkit-font-smoothing: antialiased;
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-border-strong) transparent;
+    scrollbar-color: var(--border-strong) transparent;
   }
   :focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 1px;
+    outline: 2px solid #4cc38a;
+    outline-offset: 2px;
   }
   button:not(:disabled) {
     cursor: pointer;
+  }
+  html,
+  body,
+  aside,
+  main,
+  section,
+  header {
+    transition:
+      background-color 200ms ease-out,
+      color 200ms ease-out,
+      border-color 200ms ease-out;
   }
 }
 
@@ -74,22 +200,36 @@
     background-image: repeating-linear-gradient(135deg, transparent 0 5px, rgba(255, 255, 255, 0.035) 5px 6px);
   }
   [data-drop='ok'] {
-    outline: 2px solid var(--color-ok) !important;
+    outline: 2px solid var(--income) !important;
     outline-offset: 1px;
-    background-color: color-mix(in srgb, var(--color-ok) 18%, transparent) !important;
+    background-color: color-mix(in srgb, var(--income) 18%, transparent) !important;
   }
   [data-drop='bad'] {
-    outline: 2px solid var(--color-crit) !important;
+    outline: 2px solid var(--danger) !important;
     outline-offset: 1px;
   }
   .grille {
     background-image: radial-gradient(rgba(255, 255, 255, 0.09) 0.8px, transparent 1px);
     background-size: 4px 4px;
   }
+  /* Section heading (DESIGN.md h2) */
+  .h2 {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-blink {
     animation: none;
+  }
+  html,
+  body,
+  aside,
+  main,
+  section,
+  header {
+    transition: none;
   }
 }

@@ -19,6 +19,7 @@ import { TerminalPage } from '@/pages/TerminalPage';
 import { WorkOrdersPage } from '@/pages/WorkOrdersPage';
 import { saveState } from '@/simulation/core/persistence';
 import { engine, useSimulationStore } from '@/stores/simulationStore';
+import { useUiStore } from '@/stores/uiStore';
 
 function NotFound() {
   return (
@@ -66,7 +67,15 @@ export function AppRoutes() {
   );
 }
 
+function useThemeAttribute() {
+  const theme = useUiStore((s) => s.theme);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+}
+
 export default function App() {
+  useThemeAttribute();
   useEffect(() => {
     // Start the real-time clock; in development expose the engine for debugging and E2E checks.
     useSimulationStore.getState().setRunning(true);

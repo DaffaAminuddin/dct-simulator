@@ -25,6 +25,7 @@ export interface ActivityEntry {
 }
 
 interface ProgressStore {
+  learnerName: string;
   modulesCompleted: string[];
   workOrders: Record<string, WorkOrderRun>;
   mistakes: Record<string, number>;
@@ -36,6 +37,7 @@ interface ProgressStore {
   recordAction: () => void;
   log: (text: string) => void;
   resetProgress: () => void;
+  setLearnerName: (name: string) => void;
   /** Simulation was reset: in-progress tickets no longer have their scenario. */
   abandonRuns: () => void;
 }
@@ -45,6 +47,7 @@ export { SESSION_ID } from '@/simulation/core/persistence';
 export const useProgressStore = create<ProgressStore>()(
   persist(
     (set) => ({
+      learnerName: 'Technician',
       modulesCompleted: [],
       workOrders: {},
       mistakes: {},
@@ -67,6 +70,7 @@ export const useProgressStore = create<ProgressStore>()(
       recordAction: () => set((st) => ({ actions: st.actions + 1 })),
       log: (text) => set((st) => ({ activity: [{ at: Date.now(), text }, ...st.activity].slice(0, 50) })),
       resetProgress: () => set({ modulesCompleted: [], workOrders: {}, mistakes: {}, actions: 0, activity: [] }),
+      setLearnerName: (learnerName) => set({ learnerName: learnerName.trim().slice(0, 40) || 'Technician' }),
       abandonRuns: () =>
         set((st) => ({
           workOrders: Object.fromEntries(

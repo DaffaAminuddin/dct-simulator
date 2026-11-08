@@ -36,7 +36,7 @@ export function LearningCenterPage() {
                   type="button"
                   onClick={() => navigate(`/learn/${x.id}`)}
                   aria-current={x.id === m.id}
-                  className={cn('flex w-full items-center gap-2 rounded-[4px] px-2 py-1.5 text-left text-[12.5px] hover:bg-surface-3', x.id === m.id && 'bg-surface-3')}
+                  className={cn('flex w-full items-center gap-2 rounded-chip px-2 py-1.5 text-left text-[12.5px] hover:bg-surface-3', x.id === m.id && 'bg-surface-3')}
                 >
                   {done.includes(x.id) ? <CheckCircle2 className="size-4 shrink-0 text-ok" /> : <Circle className="size-4 shrink-0 text-subtle" />}
                   <span className="w-5 text-right font-mono text-[11px] text-subtle">{x.number}</span>

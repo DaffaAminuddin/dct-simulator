@@ -5,6 +5,7 @@ import { FaultInjectorPanel } from '@/components/diagnostics/FaultInjectorPanel'
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/misc';
 import { Panel } from '@/components/ui/panel';
+import { Input } from '@/components/ui/select';
 import { Segmented } from '@/components/ui/tabs';
 import { useProgressStore } from '@/stores/progressStore';
 import { useSimulationStore } from '@/stores/simulationStore';
@@ -23,6 +24,9 @@ export function SettingsPage() {
   const setDevMode = useUiStore((s) => s.setDevMode);
   const reset = useSimulationStore((s) => s.reset);
   const resetProgress = useProgressStore((s) => s.resetProgress);
+  const learnerName = useProgressStore((s) => s.learnerName);
+  const setLearnerName = useProgressStore((s) => s.setLearnerName);
+  const [nameDraft, setNameDraft] = useState(learnerName);
   const notify = useUiStore((s) => s.notify);
   const [confirm, setConfirm] = useState<'sim' | 'progress' | null>(null);
 
@@ -67,7 +71,7 @@ export function SettingsPage() {
       <Panel title="Developer mode" className="lg:col-span-2">
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-[12.5px]">
-            <input type="checkbox" checked={devMode} onChange={(e) => setDevMode(e.target.checked)} className="size-4 accent-[#7cc33f]" />
+            <input type="checkbox" checked={devMode} onChange={(e) => setDevMode(e.target.checked)} className="size-4 accent-[#4cc38a]" />
             <FlaskConical className="size-4 text-warn" /> Enable developer mode (ground truth, fault injection)
           </label>
           {devMode ? (
@@ -81,8 +85,21 @@ export function SettingsPage() {
         </div>
       </Panel>
 
-      <Panel title="Learner progress">
-        <div className="space-y-2">
+      <Panel title="Learner profile">
+        <div className="space-y-3">
+          <form
+            className="flex flex-wrap items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setLearnerName(nameDraft);
+              notify({ tone: 'ok', title: 'Name updated' });
+            }}
+          >
+            <Input aria-label="Display name" className="w-56" maxLength={40} value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} placeholder="Your name" />
+            <Button type="submit" variant="outline" disabled={!nameDraft.trim() || nameDraft.trim() === learnerName}>
+              Save name
+            </Button>
+          </form>
           <p className="text-[12px] text-muted">Progress is stored in this browser. Backend sync arrives in Phase 6.</p>
           {confirm === 'progress' ? (
             <div className="flex gap-2">
